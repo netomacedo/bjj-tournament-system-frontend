@@ -1,0 +1,132 @@
+.tournament-detail-container {
+  max-width: 1400px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.detail-header h2 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 2rem;
+}
+
+.header-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.detail-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.info-sections {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.info-section {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.info-section h3 {
+  margin: 0 0 1rem 0;
+  color: #2c3e50;
+  font-size: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #e3f2fd;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.info-row.rules {
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.info-row .label {
+  font-weight: 600;
+  color: #666;
+  min-width: 140px;
+}
+
+.info-row .value {
+  color: #2c3e50;
+  text-align: right;
+  flex: 1;
+}
+
+.info-row.rules .value {
+  text-align: left;
+  background: #f8f9fa;
+  padding: 0.75rem;
+  border-radius: 4px;
+  white-space: pre-wrap;
+}
+
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.divisions-section {
+  margin-top: 2rem;
+}
+
+@media (max-width: 768px) {
+  .detail-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .header-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .header-actions button {
+    width: 100%;
+  }
+
+  .info-sections {
+    grid-template-columns: 1fr;
+  }
+
+  .info-row {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .info-row .value {
+    text-align: left;
+  }
+}

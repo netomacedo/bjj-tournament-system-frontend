@@ -1,0 +1,89 @@
+.match-scorer {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.scorer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.scorer-header h2 {
+  font-size: 2rem;
+  color: #1a1a2e;
+}
+
+.scoreboard {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 2rem;
+  background: white;
+  padding: 2rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+}
+
+.athlete-score {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.athlete-score h3 {
+  text-align: center;
+  color: #1a1a2e;
+  font-size: 1.5rem;
+}
+
+.score-display {
+  background: #f8f9fa;
+  padding: 2rem;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.score-display .points {
+  font-size: 4rem;
+  font-weight: bold;
+  color: #4169e1;
+}
+
+.score-display .advantages {
+  font-size: 1.2rem;
+  color: #666;
+  margin-top: 0.5rem;
+}
+
+.score-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.vs-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: bold;
+  color: #1a1a2e;
+}
+
+.scorer-actions {
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .scoreboard {
+    grid-template-columns: 1fr;
+  }
+
+  .vs-divider {
+    transform: rotate(90deg);
+    margin: 1rem 0;
+  }
+}
