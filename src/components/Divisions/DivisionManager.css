@@ -280,6 +280,32 @@
   margin-top: 0.5rem;
 }
 
+.athletes-preview-simple {
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  background: #e3f2fd;
+  border-radius: 8px;
+  border: 1px solid #90caf9;
+  text-align: center;
+}
+
+.athletes-preview-simple strong {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: #1976d2;
+  font-size: 1.1rem;
+  margin-bottom: 0.75rem;
+}
+
+.preview-note {
+  color: #0d47a1;
+  font-size: 0.9rem;
+  margin: 0.5rem 0 1rem 0;
+  font-weight: 500;
+}
+
 .no-athletes-preview {
   margin-top: 1.5rem;
   padding: 2rem 1rem;

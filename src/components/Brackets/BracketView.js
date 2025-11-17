@@ -11,6 +11,7 @@ const BracketView = () => {
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [generating, setGenerating] = useState(false);
 
   useEffect(() => {
     if (divisionId) {
@@ -26,13 +27,31 @@ const BracketView = () => {
       // Fetch division first
       const divisionRes = await divisionService.getDivisionById(divisionId);
       setDivision(divisionRes.data);
+      console.log('Division data:', divisionRes.data);
 
       // Try to fetch matches, but don't fail if they don't exist
       try {
         const matchesRes = await matchService.getMatchesByDivision(divisionId);
-        setMatches(matchesRes.data || []);
+        console.log('=== MATCHES DEBUG ===');
+        console.log('Full response:', matchesRes);
+        console.log('Response data:', matchesRes.data);
+        console.log('Is array?:', Array.isArray(matchesRes.data));
+        console.log('Data length:', matchesRes.data?.length);
+
+        if (matchesRes.data && matchesRes.data.length > 0) {
+          console.log('First match sample:', JSON.stringify(matchesRes.data[0], null, 2));
+        }
+
+        // Handle both array and object responses
+        const matchesData = Array.isArray(matchesRes.data)
+          ? matchesRes.data
+          : (matchesRes.data?.matches || []);
+
+        console.log('Processed matches count:', matchesData.length);
+        setMatches(matchesData);
       } catch (matchErr) {
-        console.log('No matches generated yet:', matchErr);
+        console.error('Error fetching matches:', matchErr);
+        console.error('Match error response:', matchErr.response);
         setMatches([]);
       }
 
@@ -42,6 +61,25 @@ const BracketView = () => {
       setError(err.response?.data?.message || 'Failed to load division data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGenerateMatches = async () => {
+    if (!window.confirm('Generate matches automatically for this division?')) {
+      return;
+    }
+
+    try {
+      setGenerating(true);
+      await divisionService.generateMatches(divisionId);
+      alert('Matches generated successfully!');
+      // Reload the bracket data
+      await fetchBracketData();
+    } catch (err) {
+      console.error('Error generating matches:', err);
+      alert('Failed to generate matches: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setGenerating(false);
     }
   };
 
@@ -146,6 +184,21 @@ const BracketView = () => {
           <span className="empty-icon">⚔️</span>
           <h4>No Matches Generated</h4>
           <p>Matches haven't been generated for this division yet.</p>
+          <div className="action-buttons">
+            <button
+              className="btn btn-primary btn-large"
+              onClick={handleGenerateMatches}
+              disabled={generating}
+            >
+              {generating ? 'Generating...' : '⚡ Generate Matches Automatically'}
+            </button>
+            <button
+              className="btn btn-secondary btn-large"
+              onClick={() => navigate(`/divisions/${divisionId}/generate-matches`)}
+            >
+              ✏️ Create Matches Manually
+            </button>
+          </div>
         </div>
       ) : (
         <div className="bracket-container">

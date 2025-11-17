@@ -27,12 +27,6 @@ const Header = () => {
           <Link to="/tournaments" className={isActive('/tournaments')}>
             Tournaments
           </Link>
-          <Link to="/matches" className={isActive('/matches')}>
-            Matches
-          </Link>
-          <Link to="/brackets" className={isActive('/brackets')}>
-            Brackets
-          </Link>
         </nav>
       </div>
     </header>

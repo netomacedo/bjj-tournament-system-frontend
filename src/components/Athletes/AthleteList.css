@@ -27,7 +27,8 @@
   align-items: flex-end;
 }
 
-.search-box, .filter-box {
+.search-box,
+.filter-box {
   display: flex;
   gap: 0.5rem;
   align-items: center;
@@ -35,7 +36,8 @@
   min-width: 200px;
 }
 
-.search-box input, .filter-box select {
+.search-box input,
+.filter-box select {
   padding: 0.75rem;
   border: 2px solid #ddd;
   border-radius: 5px;
@@ -44,86 +46,87 @@
   transition: border-color 0.3s ease;
 }
 
-.search-box input:focus, .filter-box select:focus {
+.search-box input:focus,
+.filter-box select:focus {
   outline: none;
   border-color: #4169e1;
 }
 
 .athlete-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
   gap: 2rem;
 }
 
-.athlete-card {
+/* Use higher specificity instead of !important */
+.athlete-list .athlete-grid .athlete-card {
   background: white;
   border-radius: 10px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: all 0.3s ease;
   display: flex;
   flex-direction: column;
-  height: 100%;
+  text-align: left;
 }
 
-.athlete-card:hover {
+.athlete-list .athlete-grid .athlete-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
 }
 
-.belt-indicator {
+.athlete-list .athlete-grid .athlete-card .belt-indicator {
   height: 8px;
   width: 100%;
-  border-bottom: 1px solid #e0e0e0;
-  flex-shrink: 0;
+  border-radius: 10px 10px 0 0;
 }
 
-.athlete-info {
+.athlete-list .athlete-grid .athlete-card .athlete-info {
   padding: 1.5rem;
   flex: 1;
-  display: flex;
-  flex-direction: column;
 }
 
-.athlete-info h3 {
-  margin: 0 0 1rem 0;
+.athlete-list .athlete-grid .athlete-card .athlete-info h3 {
+  margin: 0 0 1.25rem 0;
   color: #1a1a2e;
-  font-size: 1.25rem;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  line-height: 1.3;
+  font-size: 1.3rem;
+  font-weight: 600;
 }
 
-.info-row {
+.athlete-list .athlete-grid .athlete-card .athlete-info .info-row {
   display: flex;
-  justify-content: space-between;
-  margin-bottom: 0.5rem;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid #f0f0f0;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
 }
 
-.info-row:last-child {
-  border-bottom: none;
+.athlete-list .athlete-grid .athlete-card .athlete-info .info-row:last-child {
+  margin-bottom: 0;
 }
 
-.info-row .label {
+.athlete-list .athlete-grid .athlete-card .athlete-info .info-row .label {
+  flex: 0 0 80px;
   font-weight: 600;
   color: #666;
 }
 
-.info-row .value {
+.athlete-list .athlete-grid .athlete-card .athlete-info .info-row .value {
+  flex: 1;
   color: #1a1a2e;
+  font-weight: 400;
 }
 
-.athlete-actions {
+.athlete-list .athlete-grid .athlete-card .athlete-actions {
   display: flex;
-  gap: 0.5rem;
-  padding: 1rem 1.5rem;
+  gap: 0.75rem;
+  padding: 1.25rem 1.5rem;
   background-color: #f8f9fa;
   border-top: 1px solid #e9ecef;
+  justify-content: center;
 }
 
-.loading, .error, .no-data {
+.loading,
+.error,
+.no-data {
   text-align: center;
   padding: 3rem;
   font-size: 1.2rem;
@@ -177,9 +180,9 @@
 }
 
 .btn-small {
-  padding: 0.5rem 1rem;
+  padding: 0.5rem 1.25rem;
   font-size: 0.9rem;
-  flex: 1;
+  min-width: 80px;
 }
 
 @media (max-width: 768px) {
@@ -197,11 +200,13 @@
     flex-direction: column;
   }
 
-  .search-box, .filter-box {
+  .search-box,
+  .filter-box {
     width: 100%;
   }
 
-  .search-box input, .filter-box select {
+  .search-box input,
+  .filter-box select {
     flex: 1;
     min-width: auto;
   }

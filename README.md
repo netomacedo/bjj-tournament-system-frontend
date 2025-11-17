@@ -10,6 +10,7 @@ A comprehensive React-based frontend application for managing Brazilian Jiu-Jits
 ## Table of Contents
 
 - [Features](#features)
+- [System Flow](#system-flow)
 - [Tech Stack](#tech-stack)
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
@@ -71,6 +72,107 @@ A comprehensive React-based frontend application for managing Brazilian Jiu-Jits
 - Points, advantages, and penalties tracking
 - Match timer integration
 - Winner determination
+
+## System Flow
+
+The BJJ Tournament Management System follows a hierarchical workflow designed to match real-world tournament operations:
+
+### 1. Athlete Registration
+**Entry Point**: Dashboard → Athletes → Register Athlete
+
+- **Who**: Tournament organizers, coaches, or gym owners
+- **What**: Register athletes with complete profiles
+- **Data Collected**: Personal info (name, DOB, gender), BJJ credentials (belt, team), physical attributes (weight), contact information
+- **Navigation**: Header → AthleteList → AthleteForm
+
+### 2. Tournament Creation
+**Entry Point**: Dashboard → Tournaments → Create Tournament
+
+- **Who**: Tournament directors
+- **What**: Set up a new tournament event
+- **Configuration**: Tournament name, date, location, registration deadline, status
+- **Navigation**: Dashboard → TournamentList → TournamentForm
+
+### 3. Division Setup
+**Entry Point**: Tournaments → Select Tournament → Manage Divisions
+
+- **Who**: Tournament organizers
+- **What**: Create competitive divisions
+- **Division Criteria**:
+  - Belt Rank (White-Grey to Red - 19 IBJJF ranks)
+  - Age Category (Mighty Mite to Master 7 - 14 categories)
+  - Gender (Male/Female/Not Applicable)
+  - Weight Class (Gender-specific IBJJF divisions)
+  - Bracket Type (Single/Double Elimination, Round Robin)
+- **Smart Features**: Auto name generation, duplicate prevention, validation
+- **Navigation**: TournamentDetail → DivisionManager → DivisionForm
+
+### 4. Athlete Enrollment
+**Entry Point**: Division Manager → Select Division → Enroll Athletes
+
+- **Who**: Tournament organizers
+- **What**: Add athletes to their appropriate divisions
+- **Interface**: Two-panel design (Enrolled | Available)
+- **Features**: Real-time search, pagination (5/page), visual athlete cards, eligibility validation, confirmation modals
+- **Navigation**: DivisionManager → AthleteEnrollment
+
+### 5. Match Generation
+**Entry Point**: Division Manager → Select Division → Generate Matches
+
+- **Who**: Tournament organizers
+- **Options**:
+  - **Automatic**: System randomly shuffles and pairs athletes
+  - **Manual**: Coach manually selects athlete pairings
+- **Validation**: Minimum 2 athletes, duplicate prevention
+- **Navigation**: DivisionManager → Auto Generate OR MatchGenerator
+
+### 6. Bracket View
+**Entry Point**: Division Manager → Select Division → View Bracket
+
+- **Who**: Tournament staff, coaches, spectators
+- **Features**: Round organization (R1, Quarters, Semis, Final), status indicators (Pending/In Progress/Completed), score display, winner highlighting, mat assignments
+- **Navigation**: DivisionManager → BracketView
+
+### 7. Match Execution
+**Entry Point**: Bracket View → Select Match OR Division Manager → View Matches
+
+- **Workflow**:
+  1. **Pending** → "Start Match" → API: `POST /api/matches/{id}/start` → Status: In Progress
+  2. **In Progress** → "Score Match" → MatchScorer (real-time IBJJF scoring) → API: `PUT /api/matches/{id}` → "Complete" → API: `POST /api/matches/{id}/complete`
+  3. **Completed** → "View Details" → Display scores, winner, submission type
+- **Navigation**: BracketView/MatchList → MatchScorer
+
+### 8. Tournament Progression
+- Completed matches automatically update brackets
+- Winners advance to next round
+- Dashboard statistics update in real-time
+
+### Data Flow Diagram
+
+```
+Dashboard (Entry)
+    ├── Athletes → Register → AthleteList
+    └── Tournaments → Create → TournamentList
+            └── Select Tournament → DivisionManager
+                    ├── Create Division → DivisionForm
+                    ├── Enroll Athletes → AthleteEnrollment
+                    ├── Generate Matches → Auto/Manual
+                    ├── View Bracket → BracketView → MatchList
+                    └── Matches → MatchList → MatchScorer
+```
+
+### Navigation Structure
+
+**Top Navigation** (Header):
+- Dashboard
+- Athletes
+- Tournaments
+
+**Note**: "Matches" and "Brackets" are NOT in top navigation - they require tournament/division context and are only accessible through the division manager.
+
+**Quick Actions** (Dashboard):
+- + Register Athlete
+- + Create Tournament
 
 ## Tech Stack
 

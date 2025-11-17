@@ -8,8 +8,7 @@ const Dashboard = () => {
   const [stats, setStats] = useState({
     totalAthletes: 0,
     totalTournaments: 0,
-    upcomingTournaments: 0,
-    activeTournaments: 0
+    upcomingTournaments: 0
   });
   const [loading, setLoading] = useState(true);
   const [upcomingTournaments, setUpcomingTournaments] = useState([]);
@@ -30,15 +29,11 @@ const Dashboard = () => {
       ]);
 
       const tournaments = tournamentsRes.data;
-      const activeTournaments = tournaments.filter(t => 
-        t.status === 'IN_PROGRESS' || t.status === 'REGISTRATION_OPEN'
-      );
 
       setStats({
         totalAthletes: athletesRes.data.length,
         totalTournaments: tournaments.length,
-        upcomingTournaments: upcomingRes.data.length,
-        activeTournaments: activeTournaments.length
+        upcomingTournaments: upcomingRes.data.length
       });
 
       setUpcomingTournaments(upcomingRes.data.slice(0, 3));
@@ -95,21 +90,7 @@ const Dashboard = () => {
             <div className="stat-value">{stats.upcomingTournaments}</div>
             <div className="stat-label">Upcoming Tournaments</div>
           </div>
-          <button 
-            className="stat-action"
-            onClick={() => navigate('/tournaments')}
-          >
-            View All →
-          </button>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-icon">⚡</div>
-          <div className="stat-content">
-            <div className="stat-value">{stats.activeTournaments}</div>
-            <div className="stat-label">Active Tournaments</div>
-          </div>
-          <button 
+          <button
             className="stat-action"
             onClick={() => navigate('/tournaments')}
           >
@@ -121,29 +102,17 @@ const Dashboard = () => {
       <div className="quick-actions">
         <h2>Quick Actions</h2>
         <div className="action-buttons">
-          <button 
+          <button
             className="btn btn-primary"
             onClick={() => navigate('/athletes/register')}
           >
             + Register Athlete
           </button>
-          <button 
+          <button
             className="btn btn-primary"
             onClick={() => navigate('/tournaments/create')}
           >
             + Create Tournament
-          </button>
-          <button 
-            className="btn btn-secondary"
-            onClick={() => navigate('/matches')}
-          >
-            View Matches
-          </button>
-          <button 
-            className="btn btn-secondary"
-            onClick={() => navigate('/brackets')}
-          >
-            View Brackets
           </button>
         </div>
       </div>

@@ -17,6 +17,8 @@ const AthleteEnrollment = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [modalConfig, setModalConfig] = useState({ isOpen: false });
+  const [currentPage, setCurrentPage] = useState(1);
+  const athletesPerPage = 5;
 
   useEffect(() => {
     fetchData();
@@ -56,6 +58,7 @@ const AthleteEnrollment = () => {
   const filterAthletes = () => {
     if (!searchTerm.trim()) {
       setFilteredAthletes(availableAthletes);
+      setCurrentPage(1);
       return;
     }
 
@@ -66,6 +69,17 @@ const AthleteEnrollment = () => {
       athlete.email?.toLowerCase().includes(search)
     );
     setFilteredAthletes(filtered);
+    setCurrentPage(1);
+  };
+
+  // Pagination logic
+  const indexOfLastAthlete = currentPage * athletesPerPage;
+  const indexOfFirstAthlete = indexOfLastAthlete - athletesPerPage;
+  const currentAthletes = filteredAthletes.slice(indexOfFirstAthlete, indexOfLastAthlete);
+  const totalPages = Math.ceil(filteredAthletes.length / athletesPerPage);
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
   };
 
   const handleEnroll = async (athlete) => {
@@ -220,14 +234,16 @@ const AthleteEnrollment = () => {
               {enrolledAthletes.map(athlete => (
                 <div key={athlete.id} className="athlete-card enrolled">
                   <div className="athlete-info">
-                    <h4>{athlete.name}</h4>
-                    <div className="athlete-details">
-                      <span className="detail-badge belt">{getBeltLabel(athlete.beltRank)}</span>
-                      <span className="detail-badge">⚖️ {athlete.weight} kg</span>
-                      <span className="detail-badge">🎂 {calculateAge(athlete.dateOfBirth)} yrs</span>
-                      <span className="detail-badge">{athlete.gender}</span>
+                    <div className="athlete-name-row">
+                      <h4>{athlete.name || 'Unknown Athlete'}</h4>
+                      {athlete.team && <span className="team-badge">🏋️ {athlete.team}</span>}
                     </div>
-                    {athlete.team && <p className="team">🏋️ {athlete.team}</p>}
+                    <div className="athlete-details">
+                      {athlete.beltRank && <span className="detail-badge belt">{getBeltLabel(athlete.beltRank)}</span>}
+                      {athlete.weight && <span className="detail-badge">⚖️ {athlete.weight} kg</span>}
+                      {athlete.dateOfBirth && <span className="detail-badge">🎂 {calculateAge(athlete.dateOfBirth)} yrs</span>}
+                      {athlete.gender && <span className="detail-badge">{athlete.gender}</span>}
+                    </div>
                   </div>
                   <button
                     className="btn btn-small btn-danger"
@@ -264,31 +280,57 @@ const AthleteEnrollment = () => {
               <small>{searchTerm ? 'Try a different search term' : 'All athletes are already enrolled'}</small>
             </div>
           ) : (
-            <div className="athletes-list">
-              {filteredAthletes.map(athlete => (
-                <div key={athlete.id} className="athlete-card available">
-                  <div className="athlete-info">
-                    <h4>{athlete.name}</h4>
-                    <div className="athlete-details">
-                      <span className="detail-badge belt">{getBeltLabel(athlete.beltRank)}</span>
-                      <span className="detail-badge">⚖️ {athlete.weight} kg</span>
-                      <span className="detail-badge">🎂 {calculateAge(athlete.dateOfBirth)} yrs</span>
-                      <span className="detail-badge">{athlete.gender}</span>
+            <>
+              <div className="athletes-list">
+                {currentAthletes.map(athlete => (
+                  <div key={athlete.id} className="athlete-card available">
+                    <div className="athlete-info">
+                      <div className="athlete-name-row">
+                        <h4>{athlete.name || 'Unknown Athlete'}</h4>
+                        {athlete.team && <span className="team-badge">🏋️ {athlete.team}</span>}
+                      </div>
+                      <div className="athlete-details">
+                        {athlete.beltRank && <span className="detail-badge belt">{getBeltLabel(athlete.beltRank)}</span>}
+                        {athlete.weight && <span className="detail-badge">⚖️ {athlete.weight} kg</span>}
+                        {athlete.dateOfBirth && <span className="detail-badge">🎂 {calculateAge(athlete.dateOfBirth)} yrs</span>}
+                        {athlete.gender && <span className="detail-badge">{athlete.gender}</span>}
+                      </div>
+                      {athlete.experienceNotes && (
+                        <p className="notes">📝 {athlete.experienceNotes}</p>
+                      )}
                     </div>
-                    {athlete.team && <p className="team">🏋️ {athlete.team}</p>}
-                    {athlete.experienceNotes && (
-                      <p className="notes">📝 {athlete.experienceNotes}</p>
-                    )}
+                    <button
+                      className="btn btn-small btn-primary"
+                      onClick={() => handleEnroll(athlete)}
+                    >
+                      + Enroll
+                    </button>
                   </div>
+                ))}
+              </div>
+
+              {totalPages > 1 && (
+                <div className="pagination">
                   <button
-                    className="btn btn-small btn-primary"
-                    onClick={() => handleEnroll(athlete)}
+                    className="pagination-btn"
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
                   >
-                    + Enroll
+                    ← Previous
+                  </button>
+                  <span className="pagination-info">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <button
+                    className="pagination-btn"
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next →
                   </button>
                 </div>
-              ))}
-            </div>
+              )}
+            </>
           )}
         </div>
       </div>

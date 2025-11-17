@@ -324,15 +324,14 @@ const DivisionManager = ({ tournamentId }) => {
                             </li>
                           )}
                         </ul>
-                        <button
-                          className="btn btn-small btn-secondary view-all-btn"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/divisions/${division.id}/athletes`);
-                          }}
-                        >
-                          View All Athletes
-                        </button>
+                      </div>
+                    ) : division.athleteCount > 0 ? (
+                      <div className="athletes-preview-simple">
+                        <strong>
+                          <span className="preview-icon">👥</span>
+                          {division.athleteCount} Athletes Enrolled
+                        </strong>
+                        <p className="preview-note">Click "Manage Athletes" to view full details</p>
                       </div>
                     ) : (
                       <div className="no-athletes-preview">
