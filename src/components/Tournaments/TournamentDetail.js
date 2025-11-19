@@ -55,10 +55,6 @@ const TournamentDetail = () => {
               <span className="value">{tournament.location}</span>
             </div>
             <div className="info-row">
-              <span className="label">Status:</span>
-              <span className="value status-badge">{tournament.status}</span>
-            </div>
-            <div className="info-row">
               <span className="label">Registration:</span>
               <span className="value">{tournament.registrationOpen ? 'Open' : 'Closed'}</span>
             </div>
@@ -87,7 +83,7 @@ const TournamentDetail = () => {
           <div className="info-section">
             <h3>Organizer</h3>
             <div className="info-row">
-              <span className="label">Name:</span>
+              <span className="label">Organizer:</span>
               <span className="value">{tournament.organizer || 'N/A'}</span>
             </div>
             <div className="info-row">

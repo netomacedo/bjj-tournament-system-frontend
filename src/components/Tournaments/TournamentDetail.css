@@ -93,8 +93,8 @@
   border-radius: 12px;
   font-weight: 600;
   font-size: 0.875rem;
-  background: #e3f2fd;
-  color: #1976d2;
+  display: inline-block;
+  text-align: center;
 }
 
 .divisions-section {

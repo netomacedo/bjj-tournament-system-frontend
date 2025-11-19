@@ -31,7 +31,15 @@ const MatchList = () => {
         matchService.getMatchesByDivision(divisionId),
         divisionService.getDivisionById(divisionId)
       ]);
-      setMatches(matchesResponse.data || []);
+      const matchData = matchesResponse.data || [];
+
+      // Debug logging - check match properties
+      if (matchData.length > 0) {
+        console.log('Sample match object:', matchData[0]);
+        console.log('Match properties:', Object.keys(matchData[0]));
+      }
+
+      setMatches(matchData);
       setDivision(divisionResponse.data);
       setError(null);
     } catch (err) {
@@ -44,10 +52,11 @@ const MatchList = () => {
   };
 
   const handleStartMatch = async (match) => {
+    const matchNumber = match.matchNumber || match.id || 'N/A';
     setModalConfig({
       isOpen: true,
       title: 'Start Match',
-      message: `Start Match #${match.matchNumber}?\n${match.athlete1Name} vs ${match.athlete2Name}`,
+      message: `Start Match #${matchNumber}?\n${match.athlete1Name} vs ${match.athlete2Name}`,
       confirmText: 'Start Match',
       type: 'primary',
       onConfirm: async () => {
@@ -62,13 +71,76 @@ const MatchList = () => {
             onConfirm: () => fetchData()
           });
         } catch (err) {
+          console.error('Start match error:', err);
+          console.error('Error response:', err.response);
+          console.error('Error response data:', err.response?.data);
+          console.error('Token in localStorage:', localStorage.getItem('token'));
+
+          let errorMessage = 'Failed to start match';
+
+          if (err.response?.status === 400) {
+            const backendMessage = err.response?.data?.message || err.response?.data?.error || 'Invalid request';
+            errorMessage = `Bad Request: ${backendMessage}`;
+          } else if (err.response?.status === 403) {
+            const backendMessage = err.response?.data?.message || err.response?.data?.error || '';
+            errorMessage = `Permission denied: ${backendMessage}\n\nThis is likely a backend configuration issue. The endpoint may require specific roles or permissions.`;
+          } else if (err.response?.data?.message) {
+            errorMessage = err.response.data.message;
+          } else if (err.message) {
+            errorMessage = err.message;
+          }
+
           setModalConfig({
             isOpen: true,
             title: 'Error',
-            message: `Failed to start match: ${err.response?.data?.message || err.message}`,
+            message: errorMessage,
             confirmText: 'OK',
             type: 'danger',
-            onConfirm: () => {}
+            onConfirm: () => setModalConfig({ isOpen: false })
+          });
+        }
+      }
+    });
+  };
+
+  const handleRestartMatch = async (match) => {
+    const matchNumber = match.matchNumber || match.id || 'N/A';
+    setModalConfig({
+      isOpen: true,
+      title: 'Restart Match',
+      message: `Reset Match #${matchNumber}?\n${match.athlete1Name} vs ${match.athlete2Name}\n\nThis will clear all scores and reset the match to pending status.`,
+      confirmText: 'Restart Match',
+      type: 'warning',
+      onConfirm: async () => {
+        try {
+          await matchService.resetMatch(match.id);
+          setModalConfig({
+            isOpen: true,
+            title: 'Success!',
+            message: 'Match has been reset successfully!',
+            confirmText: 'OK',
+            type: 'success',
+            onConfirm: () => fetchData()
+          });
+        } catch (err) {
+          console.error('Reset match error:', err);
+
+          let errorMessage = 'Failed to reset match';
+          if (err.response?.status === 403) {
+            errorMessage = 'Permission denied. You may not have permission to reset matches.';
+          } else if (err.response?.data?.message) {
+            errorMessage = err.response.data.message;
+          } else if (err.message) {
+            errorMessage = err.message;
+          }
+
+          setModalConfig({
+            isOpen: true,
+            title: 'Error',
+            message: errorMessage,
+            confirmText: 'OK',
+            type: 'danger',
+            onConfirm: () => setModalConfig({ isOpen: false })
           });
         }
       }
@@ -76,8 +148,17 @@ const MatchList = () => {
   };
 
   const getMatchStatus = (match) => {
+    // Backend uses status property with uppercase values: PENDING, IN_PROGRESS, COMPLETED
+    if (match.status) {
+      const status = match.status.toUpperCase();
+      if (status === 'COMPLETED') return 'completed';
+      if (status === 'IN_PROGRESS') return 'in-progress';
+      if (status === 'PENDING') return 'pending';
+    }
+
+    // Fallback to checking boolean properties (for backwards compatibility)
     if (match.completed) return 'completed';
-    if (match.inProgress) return 'in-progress';
+    if (match.inProgress || match.in_progress || match.started || match.startTime) return 'in-progress';
     return 'pending';
   };
 
@@ -185,12 +266,13 @@ const MatchList = () => {
         <div className="matches-grid">
           {matches.map((match) => {
             const status = getMatchStatus(match);
+            const matchNumber = match.matchNumber || match.id || 'N/A';
             return (
               <div key={match.id} className={`match-card ${status}`}>
                 <div className="match-header">
                   <span className="match-number">
                     <span className="match-icon">⚔️</span>
-                    Match #{match.matchNumber}
+                    Match #{matchNumber}
                   </span>
                   <span className={`match-status ${status}`}>
                     {getStatusLabel(status)}
@@ -265,13 +347,22 @@ const MatchList = () => {
                     </button>
                   )}
                   {status === 'completed' && (
-                    <button
-                      className="btn btn-small btn-secondary"
-                      onClick={() => navigate(`/matches/${match.id}`)}
-                    >
-                      <span className="btn-icon">👁️</span>
-                      View Details
-                    </button>
+                    <>
+                      <button
+                        className="btn btn-small btn-secondary"
+                        onClick={() => navigate(`/matches/${match.id}/score`)}
+                      >
+                        <span className="btn-icon">👁️</span>
+                        View Details
+                      </button>
+                      <button
+                        className="btn btn-small btn-warning"
+                        onClick={() => handleRestartMatch(match)}
+                      >
+                        <span className="btn-icon">🔄</span>
+                        Restart Match
+                      </button>
+                    </>
                   )}
                 </div>
               </div>

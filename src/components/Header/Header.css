@@ -32,6 +32,8 @@
 .nav-menu {
   display: flex;
   gap: 2rem;
+  flex: 1;
+  justify-content: center;
 }
 
 .nav-menu a {
@@ -53,6 +55,35 @@
   font-weight: 600;
 }
 
+.user-menu {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.user-name {
+  color: white;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.btn-logout {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-logout:hover {
+  background-color: #c82333;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
+}
+
 @media (max-width: 768px) {
   .header-container {
     flex-direction: column;
@@ -68,5 +99,15 @@
   .nav-menu a {
     padding: 0.5rem 0.75rem;
     font-size: 0.9rem;
+  }
+
+  .user-menu {
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  .btn-logout {
+    width: 100%;
   }
 }

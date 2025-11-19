@@ -1,6 +1,10 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
 import Header from './components/Header/Header';
+import Login from './components/Auth/Login';
+import Register from './components/Auth/Register';
+import ProtectedRoute from './components/Auth/ProtectedRoute';
 import Dashboard from './pages/Dashboard';
 import AthleteList from './components/Athletes/AthleteList';
 import AthleteForm from './components/Athletes/AthleteForm';
@@ -18,39 +22,58 @@ import './App.css';
 function App() {
   return (
     <Router>
-      <div className="App">
-        <Header />
-        <main className="main-content">
+      <AuthProvider>
+        <div className="App">
           <Routes>
-            <Route path="/" element={<Dashboard />} />
+            {/* Public Routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
 
-            {/* Athlete Routes */}
-            <Route path="/athletes" element={<AthleteList />} />
-            <Route path="/athletes/register" element={<AthleteForm />} />
-            <Route path="/athletes/edit/:id" element={<AthleteForm />} />
-            <Route path="/athletes/:id" element={<AthleteList />} />
+            {/* Protected Routes */}
+            <Route
+              path="/*"
+              element={
+                <ProtectedRoute>
+                  <>
+                    <Header />
+                    <main className="main-content">
+                      <Routes>
+                        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="/dashboard" element={<Dashboard />} />
 
-            {/* Tournament Routes */}
-            <Route path="/tournaments" element={<TournamentList />} />
-            <Route path="/tournaments/create" element={<TournamentForm />} />
-            <Route path="/tournaments/edit/:id" element={<TournamentForm />} />
-            <Route path="/tournaments/:id" element={<TournamentDetail />} />
+                        {/* Athlete Routes */}
+                        <Route path="/athletes" element={<AthleteList />} />
+                        <Route path="/athletes/register" element={<AthleteForm />} />
+                        <Route path="/athletes/edit/:id" element={<AthleteForm />} />
+                        <Route path="/athletes/:id" element={<AthleteList />} />
 
-            {/* Division Routes */}
-            <Route path="/tournaments/:tournamentId/divisions/create" element={<DivisionForm />} />
-            <Route path="/divisions/:divisionId/athletes" element={<AthleteEnrollment />} />
-            <Route path="/divisions/:divisionId/generate-matches" element={<MatchGenerator />} />
+                        {/* Tournament Routes */}
+                        <Route path="/tournaments" element={<TournamentList />} />
+                        <Route path="/tournaments/create" element={<TournamentForm />} />
+                        <Route path="/tournaments/edit/:id" element={<TournamentForm />} />
+                        <Route path="/tournaments/:id" element={<TournamentDetail />} />
 
-            {/* Match Routes */}
-            <Route path="/matches" element={<MatchList />} />
-            <Route path="/matches/:id/score" element={<MatchScorer />} />
+                        {/* Division Routes */}
+                        <Route path="/tournaments/:tournamentId/divisions/create" element={<DivisionForm />} />
+                        <Route path="/divisions/:divisionId/athletes" element={<AthleteEnrollment />} />
+                        <Route path="/divisions/:divisionId/generate-matches" element={<MatchGenerator />} />
 
-            {/* Bracket Routes */}
-            <Route path="/brackets" element={<BracketView />} />
-            <Route path="/brackets/:divisionId" element={<BracketView />} />
+                        {/* Match Routes */}
+                        <Route path="/matches" element={<MatchList />} />
+                        <Route path="/matches/:id/score" element={<MatchScorer />} />
+
+                        {/* Bracket Routes */}
+                        <Route path="/brackets" element={<BracketView />} />
+                        <Route path="/brackets/:divisionId" element={<BracketView />} />
+                      </Routes>
+                    </main>
+                  </>
+                </ProtectedRoute>
+              }
+            />
           </Routes>
-        </main>
-      </div>
+        </div>
+      </AuthProvider>
     </Router>
   );
 }

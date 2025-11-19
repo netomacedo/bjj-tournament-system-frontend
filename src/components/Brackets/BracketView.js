@@ -96,8 +96,17 @@ const BracketView = () => {
   };
 
   const getMatchStatusClass = (match) => {
+    // Backend uses status property with uppercase values: PENDING, IN_PROGRESS, COMPLETED
+    if (match.status) {
+      const status = match.status.toUpperCase();
+      if (status === 'COMPLETED') return 'completed';
+      if (status === 'IN_PROGRESS') return 'in-progress';
+      if (status === 'PENDING') return 'pending';
+    }
+
+    // Fallback to checking boolean properties (for backwards compatibility)
     if (match.completed) return 'completed';
-    if (match.inProgress) return 'in-progress';
+    if (match.inProgress || match.in_progress || match.started || match.startTime) return 'in-progress';
     return 'pending';
   };
 
@@ -209,47 +218,61 @@ const BracketView = () => {
                 <span className="round-number">Round {roundNum}</span>
               </div>
               <div className="round-matches">
-                {rounds[roundNum].map((match) => (
-                  <div
-                    key={match.id}
-                    className={`bracket-match ${getMatchStatusClass(match)}`}
-                    onClick={() => navigate(`/matches?divisionId=${divisionId}`)}
-                  >
-                    <div className="match-number">Match #{match.matchNumber}</div>
+                {rounds[roundNum].map((match) => {
+                  const status = getMatchStatusClass(match);
+                  const isCompleted = status === 'completed';
+                  const isInProgress = status === 'in-progress';
 
-                    <div className={`match-competitor ${match.winnerId === match.athlete1Id ? 'winner' : ''}`}>
-                      <div className="competitor-info">
-                        {match.winnerId === match.athlete1Id && <span className="winner-icon">👑</span>}
-                        <span className="competitor-name">{match.athlete1Name || 'TBD'}</span>
+                  return (
+                    <div
+                      key={match.id}
+                      className={`bracket-match ${status}`}
+                      onClick={() => {
+                        // Navigate to match scorer for in-progress matches, matches list for others
+                        if (isInProgress) {
+                          navigate(`/matches/${match.id}/score`);
+                        } else {
+                          navigate(`/matches?divisionId=${divisionId}`);
+                        }
+                      }}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <div className="match-number">Match #{match.matchNumber || match.id}</div>
+
+                      <div className={`match-competitor ${match.winnerId === match.athlete1Id ? 'winner' : ''}`}>
+                        <div className="competitor-info">
+                          {match.winnerId === match.athlete1Id && <span className="winner-icon">👑</span>}
+                          <span className="competitor-name">{match.athlete1Name || 'TBD'}</span>
+                        </div>
+                        {isCompleted && (
+                          <span className="competitor-score">{match.athlete1Points || 0}</span>
+                        )}
                       </div>
-                      {match.completed && (
-                        <span className="competitor-score">{match.athlete1Score || 0}</span>
+
+                      <div className="vs-separator">VS</div>
+
+                      <div className={`match-competitor ${match.winnerId === match.athlete2Id ? 'winner' : ''}`}>
+                        <div className="competitor-info">
+                          {match.winnerId === match.athlete2Id && <span className="winner-icon">👑</span>}
+                          <span className="competitor-name">{match.athlete2Name || 'TBD'}</span>
+                        </div>
+                        {isCompleted && (
+                          <span className="competitor-score">{match.athlete2Points || 0}</span>
+                        )}
+                      </div>
+
+                      {match.matNumber && (
+                        <div className="match-mat">
+                          <span>🥋 Mat {match.matNumber}</span>
+                        </div>
                       )}
-                    </div>
 
-                    <div className="vs-separator">VS</div>
-
-                    <div className={`match-competitor ${match.winnerId === match.athlete2Id ? 'winner' : ''}`}>
-                      <div className="competitor-info">
-                        {match.winnerId === match.athlete2Id && <span className="winner-icon">👑</span>}
-                        <span className="competitor-name">{match.athlete2Name || 'TBD'}</span>
+                      <div className={`match-status ${status}`}>
+                        {isCompleted ? '✓ Completed' : isInProgress ? '⚔️ In Progress' : '⏳ Pending'}
                       </div>
-                      {match.completed && (
-                        <span className="competitor-score">{match.athlete2Score || 0}</span>
-                      )}
                     </div>
-
-                    {match.matNumber && (
-                      <div className="match-mat">
-                        <span>🥋 Mat {match.matNumber}</span>
-                      </div>
-                    )}
-
-                    <div className={`match-status ${getMatchStatusClass(match)}`}>
-                      {match.completed ? '✓ Completed' : match.inProgress ? '⚔️ In Progress' : '⏳ Pending'}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           ))}

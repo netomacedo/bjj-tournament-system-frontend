@@ -34,6 +34,9 @@ const matchService = {
 
   // Complete match
   completeMatch: (id, winnerId) => api.post(`/matches/${id}/complete`, { winnerId }),
+
+  // Reset match
+  resetMatch: (id) => api.post(`/matches/${id}/reset`),
 };
 
 export default matchService;

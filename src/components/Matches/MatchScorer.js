@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import matchService from '../../services/matchService';
 import { POINT_VALUES, SUBMISSION_TYPES } from '../../constants';
+import ConfirmationModal from '../Divisions/ConfirmationModal';
 import './MatchScorer.css';
 
 const MatchScorer = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  
+
   const [match, setMatch] = useState(null);
   const [athlete1Points, setAthlete1Points] = useState(0);
   const [athlete2Points, setAthlete2Points] = useState(0);
@@ -18,6 +19,7 @@ const MatchScorer = () => {
   const [showSubmissionModal, setShowSubmissionModal] = useState(false);
   const [submissionWinner, setSubmissionWinner] = useState(null);
   const [submissionType, setSubmissionType] = useState('');
+  const [modalConfig, setModalConfig] = useState({ isOpen: false });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -57,38 +59,256 @@ const MatchScorer = () => {
     }
   };
 
+  const addPenalty = (athlete) => {
+    if (athlete === 1) {
+      setAthlete1Penalties(athlete1Penalties + 1);
+    } else {
+      setAthlete2Penalties(athlete2Penalties + 1);
+    }
+  };
+
   const saveScore = async () => {
     try {
       await matchService.updateMatch(id, {
         athlete1Points,
         athlete2Points,
         athlete1Advantages,
-        athlete2Advantages
+        athlete2Advantages,
+        athlete1Penalties,
+        athlete2Penalties
       });
-      alert('Score saved successfully');
+      setModalConfig({
+        isOpen: true,
+        title: 'Success!',
+        message: 'Score saved successfully',
+        confirmText: 'OK',
+        type: 'success',
+        onConfirm: () => setModalConfig({ isOpen: false })
+      });
     } catch (err) {
-      alert('Failed to save score');
+      setModalConfig({
+        isOpen: true,
+        title: 'Error',
+        message: 'Failed to save score: ' + (err.response?.data?.message || err.message),
+        confirmText: 'OK',
+        type: 'danger',
+        onConfirm: () => setModalConfig({ isOpen: false })
+      });
     }
+  };
+
+  const handleSubmission = (athleteNumber) => {
+    setSubmissionWinner(athleteNumber);
+    setShowSubmissionModal(true);
+  };
+
+  const recordSubmission = async () => {
+    if (!submissionType) {
+      setModalConfig({
+        isOpen: true,
+        title: 'Validation Error',
+        message: 'Please select a submission type',
+        confirmText: 'OK',
+        type: 'warning',
+        onConfirm: () => setModalConfig({ isOpen: false })
+      });
+      return;
+    }
+
+    try {
+      const winnerId = submissionWinner === 1 ? match.athlete1Id : match.athlete2Id;
+
+      await matchService.recordSubmission(id, {
+        winnerId,
+        submissionType
+      });
+
+      setShowSubmissionModal(false);
+      setModalConfig({
+        isOpen: true,
+        title: 'Success!',
+        message: 'Submission recorded! Match completed.',
+        confirmText: 'OK',
+        type: 'success',
+        onConfirm: () => navigate('/matches?divisionId=' + match.divisionId)
+      });
+    } catch (err) {
+      setShowSubmissionModal(false);
+      setModalConfig({
+        isOpen: true,
+        title: 'Error',
+        message: 'Failed to record submission: ' + (err.response?.data?.message || err.message),
+        confirmText: 'OK',
+        type: 'danger',
+        onConfirm: () => setModalConfig({ isOpen: false })
+      });
+    }
+  };
+
+  const completeMatch = async () => {
+    // Determine winner based on points, advantages, and penalties
+    let winnerId;
+    let winnerName;
+
+    if (athlete1Points > athlete2Points) {
+      winnerId = match.athlete1Id;
+      winnerName = match.athlete1Name;
+    } else if (athlete2Points > athlete1Points) {
+      winnerId = match.athlete2Id;
+      winnerName = match.athlete2Name;
+    } else if (athlete1Advantages > athlete2Advantages) {
+      winnerId = match.athlete1Id;
+      winnerName = match.athlete1Name;
+    } else if (athlete2Advantages > athlete1Advantages) {
+      winnerId = match.athlete2Id;
+      winnerName = match.athlete2Name;
+    } else if (athlete1Penalties < athlete2Penalties) {
+      winnerId = match.athlete1Id;
+      winnerName = match.athlete1Name;
+    } else if (athlete2Penalties < athlete1Penalties) {
+      winnerId = match.athlete2Id;
+      winnerName = match.athlete2Name;
+    } else {
+      setModalConfig({
+        isOpen: true,
+        title: 'Match Tied',
+        message: 'Match is tied! Please add advantages or determine winner by referee decision.',
+        confirmText: 'OK',
+        type: 'warning',
+        onConfirm: () => setModalConfig({ isOpen: false })
+      });
+      return;
+    }
+
+    try {
+      // First save the final scores
+      await matchService.updateMatch(id, {
+        athlete1Points,
+        athlete2Points,
+        athlete1Advantages,
+        athlete2Advantages,
+        athlete1Penalties,
+        athlete2Penalties
+      });
+
+      // Then complete the match
+      console.log('Completing match with winnerId:', winnerId);
+      console.log('Winner details:', { winnerId, winnerName, athlete1Id: match.athlete1Id, athlete2Id: match.athlete2Id });
+      await matchService.completeMatch(id, winnerId);
+
+      setModalConfig({
+        isOpen: true,
+        title: 'Match Completed!',
+        message: `Winner: ${winnerName}\nFinal Score: ${athlete1Points} - ${athlete2Points}`,
+        confirmText: 'OK',
+        type: 'success',
+        onConfirm: () => navigate('/matches?divisionId=' + match.divisionId)
+      });
+    } catch (err) {
+      console.error('Complete match error:', err);
+      console.error('Error response:', err.response);
+      console.error('Error data:', err.response?.data);
+
+      let errorMessage = 'Failed to complete match: ';
+      if (err.response?.status === 403) {
+        errorMessage += 'Permission denied. This is likely a backend authorization issue. Check that the user has permission to complete matches.';
+      } else {
+        errorMessage += (err.response?.data?.message || err.message);
+      }
+
+      setModalConfig({
+        isOpen: true,
+        title: 'Error',
+        message: errorMessage,
+        confirmText: 'OK',
+        type: 'danger',
+        onConfirm: () => setModalConfig({ isOpen: false })
+      });
+    }
+  };
+
+  const handleRestartMatch = () => {
+    setModalConfig({
+      isOpen: true,
+      title: 'Restart Match',
+      message: 'Reset this match?\n\nThis will clear all scores and reset the match to pending status.',
+      confirmText: 'Restart Match',
+      type: 'warning',
+      onConfirm: async () => {
+        try {
+          await matchService.resetMatch(id);
+          setModalConfig({
+            isOpen: true,
+            title: 'Success!',
+            message: 'Match has been reset successfully!',
+            confirmText: 'OK',
+            type: 'success',
+            onConfirm: () => navigate('/matches?divisionId=' + match.divisionId)
+          });
+        } catch (err) {
+          console.error('Reset match error:', err);
+
+          let errorMessage = 'Failed to reset match';
+          if (err.response?.status === 403) {
+            errorMessage = 'Permission denied. You may not have permission to reset matches.';
+          } else if (err.response?.data?.message) {
+            errorMessage = err.response.data.message;
+          } else if (err.message) {
+            errorMessage = err.message;
+          }
+
+          setModalConfig({
+            isOpen: true,
+            title: 'Error',
+            message: errorMessage,
+            confirmText: 'OK',
+            type: 'danger',
+            onConfirm: () => setModalConfig({ isOpen: false })
+          });
+        }
+      }
+    });
   };
 
   if (loading) return <div className="loading">Loading match...</div>;
   if (!match) return <div className="error">Match not found</div>;
 
+  // Check if match is completed
+  const isCompleted = match.status && match.status.toUpperCase() === 'COMPLETED';
+
   return (
     <div className="match-scorer">
+      <ConfirmationModal
+        isOpen={modalConfig.isOpen}
+        onClose={() => setModalConfig({ isOpen: false })}
+        onConfirm={modalConfig.onConfirm}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        confirmText={modalConfig.confirmText}
+        type={modalConfig.type}
+      />
+
       <div className="scorer-header">
-        <h2>Match Scorer</h2>
-        <button className="btn btn-secondary" onClick={() => navigate('/matches')}>
-          Back
-        </button>
+        <h2>Match Scorer {isCompleted && <span style={{ color: '#2e7d32' }}>✓ Completed</span>}</h2>
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          {isCompleted && (
+            <button className="btn btn-warning" onClick={handleRestartMatch}>
+              🔄 Restart Match
+            </button>
+          )}
+          <button className="btn btn-secondary" onClick={() => navigate(`/matches?divisionId=${match.divisionId}`)}>
+            Back
+          </button>
+        </div>
       </div>
 
       <div className="scoreboard">
         <div className="athlete-score">
-          <h3>Athlete 1</h3>
+          <h3>{match.athlete1Name || 'Athlete 1'}</h3>
           <div className="score-display">
             <div className="points">{athlete1Points}</div>
             <div className="advantages">Advantages: {athlete1Advantages}</div>
+            <div className="penalties">Penalties: {athlete1Penalties}</div>
           </div>
           <div className="score-controls">
             <button className="btn btn-small btn-primary" onClick={() => addPoints(1, 'TAKEDOWN')}>
@@ -109,16 +329,23 @@ const MatchScorer = () => {
             <button className="btn btn-small btn-secondary" onClick={() => addAdvantage(1)}>
               Advantage (+1)
             </button>
+            <button className="btn btn-small btn-warning" onClick={() => addPenalty(1)}>
+              Penalty
+            </button>
+            <button className="btn btn-small btn-danger" onClick={() => handleSubmission(1)}>
+              🎯 Submission Win
+            </button>
           </div>
         </div>
 
         <div className="vs-divider">VS</div>
 
         <div className="athlete-score">
-          <h3>Athlete 2</h3>
+          <h3>{match.athlete2Name || 'Athlete 2'}</h3>
           <div className="score-display">
             <div className="points">{athlete2Points}</div>
             <div className="advantages">Advantages: {athlete2Advantages}</div>
+            <div className="penalties">Penalties: {athlete2Penalties}</div>
           </div>
           <div className="score-controls">
             <button className="btn btn-small btn-primary" onClick={() => addPoints(2, 'TAKEDOWN')}>
@@ -139,15 +366,72 @@ const MatchScorer = () => {
             <button className="btn btn-small btn-secondary" onClick={() => addAdvantage(2)}>
               Advantage (+1)
             </button>
+            <button className="btn btn-small btn-warning" onClick={() => addPenalty(2)}>
+              Penalty
+            </button>
+            <button className="btn btn-small btn-danger" onClick={() => handleSubmission(2)}>
+              🎯 Submission Win
+            </button>
           </div>
         </div>
       </div>
 
-      <div className="scorer-actions">
-        <button className="btn btn-success" onClick={saveScore}>
-          Save Score
-        </button>
-      </div>
+      {!isCompleted && (
+        <div className="scorer-actions">
+          <button className="btn btn-primary" onClick={saveScore}>
+            💾 Save Score
+          </button>
+          <button className="btn btn-success btn-large" onClick={completeMatch}>
+            ✓ Complete Match (By Points)
+          </button>
+        </div>
+      )}
+
+      {isCompleted && (
+        <div className="scorer-actions">
+          <div style={{
+            padding: '1rem',
+            background: '#c8e6c9',
+            borderRadius: '8px',
+            textAlign: 'center',
+            fontSize: '1.1rem',
+            fontWeight: 'bold',
+            color: '#2e7d32'
+          }}>
+            ✓ Match Completed - Winner: {match.winnerId === match.athlete1Id ? match.athlete1Name : match.athlete2Name}
+          </div>
+        </div>
+      )}
+
+      {showSubmissionModal && (
+        <div className="modal-overlay" onClick={() => setShowSubmissionModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h3>Record Submission</h3>
+            <p>Select submission type for {submissionWinner === 1 ? match.athlete1Name : match.athlete2Name}:</p>
+
+            <div className="submission-types">
+              {SUBMISSION_TYPES.map((type) => (
+                <button
+                  key={type}
+                  className={`btn btn-small ${submissionType === type ? 'btn-primary' : 'btn-secondary'}`}
+                  onClick={() => setSubmissionType(type)}
+                >
+                  {type.replace(/_/g, ' ')}
+                </button>
+              ))}
+            </div>
+
+            <div className="modal-actions">
+              <button className="btn btn-secondary" onClick={() => setShowSubmissionModal(false)}>
+                Cancel
+              </button>
+              <button className="btn btn-success" onClick={recordSubmission}>
+                Record Submission
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
