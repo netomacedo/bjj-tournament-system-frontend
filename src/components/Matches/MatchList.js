@@ -68,7 +68,10 @@ const MatchList = () => {
             message: 'Match started successfully!',
             confirmText: 'OK',
             type: 'success',
-            onConfirm: () => fetchData()
+            onConfirm: () => {
+              setModalConfig({ isOpen: false });
+              fetchData();
+            }
           });
         } catch (err) {
           console.error('Start match error:', err);
@@ -120,7 +123,10 @@ const MatchList = () => {
             message: 'Match has been reset successfully!',
             confirmText: 'OK',
             type: 'success',
-            onConfirm: () => fetchData()
+            onConfirm: () => {
+              setModalConfig({ isOpen: false });
+              fetchData();
+            }
           });
         } catch (err) {
           console.error('Reset match error:', err);
@@ -302,7 +308,15 @@ const MatchList = () => {
                     </div>
                     {match.athlete1Team && <div className="athlete-team">{match.athlete1Team}</div>}
                     {status === 'completed' && (
-                      <div className="athlete-score">{match.athlete1Score || 0} pts</div>
+                      <div className="athlete-score">
+                        <div className="score-points">{match.athlete1Points || 0} pts</div>
+                        {(match.athlete1Advantages > 0 || match.athlete1Penalties > 0) && (
+                          <div className="score-details">
+                            {match.athlete1Advantages > 0 && <span>Adv: {match.athlete1Advantages}</span>}
+                            {match.athlete1Penalties > 0 && <span>Pen: {match.athlete1Penalties}</span>}
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
 
@@ -315,7 +329,15 @@ const MatchList = () => {
                     </div>
                     {match.athlete2Team && <div className="athlete-team">{match.athlete2Team}</div>}
                     {status === 'completed' && (
-                      <div className="athlete-score">{match.athlete2Score || 0} pts</div>
+                      <div className="athlete-score">
+                        <div className="score-points">{match.athlete2Points || 0} pts</div>
+                        {(match.athlete2Advantages > 0 || match.athlete2Penalties > 0) && (
+                          <div className="score-details">
+                            {match.athlete2Advantages > 0 && <span>Adv: {match.athlete2Advantages}</span>}
+                            {match.athlete2Penalties > 0 && <span>Pen: {match.athlete2Penalties}</span>}
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>
