@@ -291,6 +291,13 @@ const MatchScorer = () => {
       <div className="scorer-header">
         <h2>Match Scorer {isCompleted && <span style={{ color: '#2e7d32' }}>✓ Completed</span>}</h2>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button
+            className="btn btn-success"
+            onClick={() => window.open(`/display/${match.id}`, '_blank')}
+            title="Open display view in new window for big screen"
+          >
+            📺 Open Display
+          </button>
           {isCompleted && (
             <button className="btn btn-warning" onClick={handleRestartMatch}>
               🔄 Restart Match

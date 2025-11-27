@@ -13,6 +13,7 @@ import TournamentForm from './components/Tournaments/TournamentForm';
 import TournamentDetail from './components/Tournaments/TournamentDetail';
 import MatchList from './components/Matches/MatchList';
 import MatchScorer from './components/Matches/MatchScorer';
+import MatchDisplay from './components/Matches/MatchDisplay';
 import BracketView from './components/Brackets/BracketView';
 import AthleteEnrollment from './components/Divisions/AthleteEnrollment';
 import MatchGenerator from './components/Divisions/MatchGenerator';
@@ -28,6 +29,9 @@ function App() {
             {/* Public Routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+
+            {/* Public Display Route - no authentication needed for big screen */}
+            <Route path="/display/:id" element={<MatchDisplay />} />
 
             {/* Protected Routes */}
             <Route
