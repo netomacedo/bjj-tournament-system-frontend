@@ -1,42 +1,90 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import matchService from '../../services/matchService';
+import divisionService from '../../services/divisionService';
+import { getMatchDuration } from '../../constants/matchTimes';
 import './MatchDisplay.css';
 
 const MatchDisplay = () => {
   const { id } = useParams();
   const [match, setMatch] = useState(null);
+  const [division, setDivision] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [elapsedTime, setElapsedTime] = useState(0);
+
+  // Countdown timer state
+  const [countdownTime, setCountdownTime] = useState(null);
+  const [isCountdownRunning, setIsCountdownRunning] = useState(false);
+  const [countdownDuration, setCountdownDuration] = useState(null);
 
   useEffect(() => {
     fetchMatch();
     const interval = setInterval(() => {
       fetchMatch();
-    }, 3000); // Poll every 3 seconds for live updates
+    }, 2000); // Poll every 2 seconds for live updates
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
+  // Countdown timer effect
   useEffect(() => {
-    // Timer to calculate elapsed time since match start
-    const timerInterval = setInterval(() => {
-      if (match?.startTime && match?.status?.toUpperCase() === 'IN_PROGRESS') {
-        const startTime = new Date(match.startTime).getTime();
-        const now = new Date().getTime();
-        const elapsed = Math.floor((now - startTime) / 1000); // seconds
-        setElapsedTime(elapsed);
-      }
+    if (!isCountdownRunning) return;
+
+    const countdown = setInterval(() => {
+      setCountdownTime((prevTime) => {
+        if (prevTime <= 0) {
+          setIsCountdownRunning(false);
+          return 0;
+        }
+        return prevTime - 1;
+      });
     }, 1000);
 
-    return () => clearInterval(timerInterval);
-  }, [match]);
+    return () => clearInterval(countdown);
+  }, [isCountdownRunning]);
+
+  const handleStartCountdown = () => {
+    if (countdownTime === null || countdownTime === 0) {
+      // Reset to full duration
+      setCountdownTime(countdownDuration);
+    }
+    setIsCountdownRunning(true);
+  };
+
+  const handlePauseCountdown = () => {
+    setIsCountdownRunning(false);
+  };
+
+  const handleResetCountdown = () => {
+    setIsCountdownRunning(false);
+    setCountdownTime(countdownDuration);
+  };
 
   const fetchMatch = async () => {
     try {
       const response = await matchService.getMatchById(id);
-      setMatch(response.data);
+      const matchData = response.data;
+      setMatch(matchData);
+
+      // Fetch division info ONLY on first load to get match duration
+      if (matchData.divisionId && !division && countdownDuration === null) {
+        try {
+          const divisionResponse = await divisionService.getDivisionById(matchData.divisionId);
+          const divisionData = divisionResponse.data;
+          setDivision(divisionData);
+
+          // Set countdown duration based on division
+          const duration = getMatchDuration(divisionData);
+          setCountdownDuration(duration);
+          setCountdownTime(duration);
+        } catch (divErr) {
+          console.error('Error fetching division:', divErr);
+          // Set default duration if division fetch fails
+          setCountdownDuration(5 * 60); // 5 minutes default
+          setCountdownTime(5 * 60);
+        }
+      }
+
       setError(null);
     } catch (err) {
       console.error('Error fetching match:', err);
@@ -99,11 +147,29 @@ const MatchDisplay = () => {
         {status === 'PENDING' && '⏳ PENDING'}
       </div>
 
-      {/* Timer (only show when in progress) */}
-      {isInProgress && (
-        <div className="display-timer">
-          <div className="timer-label">Fight Time</div>
-          <div className="timer-value">{formatTime(elapsedTime)}</div>
+      {/* IBJJF Countdown Timer */}
+      {countdownTime !== null && (
+        <div className="countdown-timer-section">
+          <div className={`display-timer countdown ${countdownTime <= 30 ? 'warning' : ''} ${countdownTime === 0 ? 'expired' : ''}`}>
+            <div className="timer-label">⏱️ IBJJF Match Time</div>
+            <div className="timer-value countdown-value">
+              {formatTime(countdownTime)}
+            </div>
+            <div className="timer-controls">
+              {!isCountdownRunning ? (
+                <button className="timer-btn start-btn" onClick={handleStartCountdown}>
+                  ▶️ Start
+                </button>
+              ) : (
+                <button className="timer-btn pause-btn" onClick={handlePauseCountdown}>
+                  ⏸️ Pause
+                </button>
+              )}
+              <button className="timer-btn reset-btn" onClick={handleResetCountdown}>
+                🔄 Reset
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -177,7 +243,7 @@ const MatchDisplay = () => {
 
       {/* Footer with auto-refresh indicator */}
       <div className="display-footer">
-        <div className="refresh-indicator">● Auto-refreshing every 3 seconds</div>
+        <div className="refresh-indicator">● Auto-refreshing every 2 seconds</div>
       </div>
     </div>
   );

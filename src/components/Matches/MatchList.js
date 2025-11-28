@@ -252,10 +252,10 @@ const MatchList = () => {
         </div>
         <button
           className="btn btn-secondary"
-          onClick={() => navigate(-1)}
+          onClick={() => navigate(divisionId ? `/brackets/${divisionId}` : '/tournaments')}
         >
           <span className="btn-icon">←</span>
-          Back
+          {divisionId ? 'Back to Bracket' : 'Back to Tournaments'}
         </button>
       </div>
 

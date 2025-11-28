@@ -244,7 +244,7 @@ const BracketView = () => {
                           {match.winnerId === match.athlete1Id && <span className="winner-icon">👑</span>}
                           <span className="competitor-name">{match.athlete1Name || 'TBD'}</span>
                         </div>
-                        {isCompleted && (
+                        {isCompleted && !match.submissionType && (
                           <span className="competitor-score">{match.athlete1Points || 0}</span>
                         )}
                       </div>
@@ -256,10 +256,17 @@ const BracketView = () => {
                           {match.winnerId === match.athlete2Id && <span className="winner-icon">👑</span>}
                           <span className="competitor-name">{match.athlete2Name || 'TBD'}</span>
                         </div>
-                        {isCompleted && (
+                        {isCompleted && !match.submissionType && (
                           <span className="competitor-score">{match.athlete2Points || 0}</span>
                         )}
                       </div>
+
+                      {match.submissionType && (
+                        <div className="submission-result">
+                          <span className="submission-icon">🎯</span>
+                          <span className="submission-text">Submission: {match.submissionType.replace(/_/g, ' ')}</span>
+                        </div>
+                      )}
 
                       {match.matNumber && (
                         <div className="match-mat">

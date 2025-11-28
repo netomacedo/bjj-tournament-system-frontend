@@ -42,28 +42,99 @@ const MatchScorer = () => {
     }
   };
 
+  const autoSaveScore = async (updates) => {
+    try {
+      await matchService.updateMatch(id, updates);
+      console.log('Auto-saved score:', updates);
+    } catch (err) {
+      console.error('Auto-save failed:', err);
+      setModalConfig({
+        isOpen: true,
+        title: 'Auto-save Error',
+        message: 'Failed to auto-save score: ' + (err.response?.data?.message || err.message),
+        confirmText: 'OK',
+        type: 'warning',
+        onConfirm: () => setModalConfig({ isOpen: false })
+      });
+    }
+  };
+
   const addPoints = (athlete, pointType) => {
     const points = POINT_VALUES[pointType];
     if (athlete === 1) {
-      setAthlete1Points(athlete1Points + points);
+      const newPoints = athlete1Points + points;
+      setAthlete1Points(newPoints);
+      autoSaveScore({
+        athlete1Points: newPoints,
+        athlete2Points,
+        athlete1Advantages,
+        athlete2Advantages,
+        athlete1Penalties,
+        athlete2Penalties
+      });
     } else {
-      setAthlete2Points(athlete2Points + points);
+      const newPoints = athlete2Points + points;
+      setAthlete2Points(newPoints);
+      autoSaveScore({
+        athlete1Points,
+        athlete2Points: newPoints,
+        athlete1Advantages,
+        athlete2Advantages,
+        athlete1Penalties,
+        athlete2Penalties
+      });
     }
   };
 
   const addAdvantage = (athlete) => {
     if (athlete === 1) {
-      setAthlete1Advantages(athlete1Advantages + 1);
+      const newAdvantages = athlete1Advantages + 1;
+      setAthlete1Advantages(newAdvantages);
+      autoSaveScore({
+        athlete1Points,
+        athlete2Points,
+        athlete1Advantages: newAdvantages,
+        athlete2Advantages,
+        athlete1Penalties,
+        athlete2Penalties
+      });
     } else {
-      setAthlete2Advantages(athlete2Advantages + 1);
+      const newAdvantages = athlete2Advantages + 1;
+      setAthlete2Advantages(newAdvantages);
+      autoSaveScore({
+        athlete1Points,
+        athlete2Points,
+        athlete1Advantages,
+        athlete2Advantages: newAdvantages,
+        athlete1Penalties,
+        athlete2Penalties
+      });
     }
   };
 
   const addPenalty = (athlete) => {
     if (athlete === 1) {
-      setAthlete1Penalties(athlete1Penalties + 1);
+      const newPenalties = athlete1Penalties + 1;
+      setAthlete1Penalties(newPenalties);
+      autoSaveScore({
+        athlete1Points,
+        athlete2Points,
+        athlete1Advantages,
+        athlete2Advantages,
+        athlete1Penalties: newPenalties,
+        athlete2Penalties
+      });
     } else {
-      setAthlete2Penalties(athlete2Penalties + 1);
+      const newPenalties = athlete2Penalties + 1;
+      setAthlete2Penalties(newPenalties);
+      autoSaveScore({
+        athlete1Points,
+        athlete2Points,
+        athlete1Advantages,
+        athlete2Advantages,
+        athlete1Penalties,
+        athlete2Penalties: newPenalties
+      });
     }
   };
 
