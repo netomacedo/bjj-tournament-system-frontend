@@ -88,11 +88,11 @@ const TournamentList = () => {
     if (window.confirm(`Are you sure you want to delete "${name}"? This will also delete all divisions, matches, and related data. This action cannot be undone.`)) {
       try {
         await tournamentService.deleteTournament(id);
-        alert('Tournament deleted successfully');
         fetchTournaments();
       } catch (err) {
-        alert('Failed to delete tournament: ' + (err.response?.data?.message || err.message));
         console.error('Error deleting tournament:', err);
+        // Show error to user
+        window.confirm('Failed to delete tournament: ' + (err.response?.data?.message || err.message));
       }
     }
   };

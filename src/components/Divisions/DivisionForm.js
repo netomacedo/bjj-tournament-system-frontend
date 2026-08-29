@@ -91,14 +91,12 @@ const DivisionForm = () => {
       if (isEditMode) {
         // Update existing division
         await divisionService.updateDivision(divisionId, formData);
-        alert('Division updated successfully!');
         // Navigate back to the tournament detail page
         const tournamentIdToUse = tournamentId || originalTournamentId;
         navigate(`/tournaments/${tournamentIdToUse}`);
       } else {
         // Create new division
         await divisionService.createDivision(tournamentId, formData);
-        alert('Division created successfully!');
         navigate(`/tournaments/${tournamentId}`);
       }
     } catch (err) {
