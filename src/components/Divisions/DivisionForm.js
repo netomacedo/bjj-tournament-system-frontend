@@ -88,15 +88,21 @@ const DivisionForm = () => {
       setLoading(true);
       setError(null);
 
+      // Prepare data - convert empty string to null for optional fields
+      const submitData = {
+        ...formData,
+        weightClass: formData.weightClass || null
+      };
+
       if (isEditMode) {
         // Update existing division
-        await divisionService.updateDivision(divisionId, formData);
+        await divisionService.updateDivision(divisionId, submitData);
         // Navigate back to the tournament detail page
         const tournamentIdToUse = tournamentId || originalTournamentId;
         navigate(`/tournaments/${tournamentIdToUse}`);
       } else {
         // Create new division
-        await divisionService.createDivision(tournamentId, formData);
+        await divisionService.createDivision(tournamentId, submitData);
         navigate(`/tournaments/${tournamentId}`);
       }
     } catch (err) {
