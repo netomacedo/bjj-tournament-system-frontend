@@ -89,9 +89,12 @@ const DivisionForm = () => {
       setError(null);
 
       // Prepare data - convert empty string to null for optional fields
+      // and transform weight class to include gender prefix
       const submitData = {
         ...formData,
-        weightClass: formData.weightClass || null
+        weightClass: formData.weightClass
+          ? `ADULT_${formData.gender}_${formData.weightClass}`
+          : null
       };
 
       if (isEditMode) {
