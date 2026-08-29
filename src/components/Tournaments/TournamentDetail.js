@@ -25,6 +25,19 @@ const TournamentDetail = () => {
     }
   };
 
+  const handleDeleteTournament = async () => {
+    if (window.confirm(`Are you sure you want to delete "${tournament.name}"? This will also delete all divisions, matches, and related data. This action cannot be undone.`)) {
+      try {
+        await tournamentService.deleteTournament(id);
+        alert('Tournament deleted successfully');
+        navigate('/tournaments');
+      } catch (err) {
+        alert('Failed to delete tournament: ' + (err.response?.data?.message || err.message));
+        console.error('Error deleting tournament:', err);
+      }
+    }
+  };
+
   if (loading) return <div className="loading">Loading tournament details...</div>;
   if (!tournament) return <div className="error">Tournament not found</div>;
 
@@ -34,10 +47,13 @@ const TournamentDetail = () => {
         <h2>{tournament.name}</h2>
         <div className="header-actions">
           <button className="btn btn-primary" onClick={() => navigate(`/tournaments/edit/${id}`)}>
-            Edit Tournament
+            ✏️ Edit Tournament
+          </button>
+          <button className="btn btn-danger" onClick={handleDeleteTournament}>
+            🗑️ Delete Tournament
           </button>
           <button className="btn btn-secondary" onClick={() => navigate('/tournaments')}>
-            Back to List
+            ← Back to List
           </button>
         </div>
       </div>

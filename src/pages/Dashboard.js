@@ -1,144 +1,134 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import athleteService from '../services/athleteService';
+import { useAuth } from '../context/AuthContext';
 import tournamentService from '../services/tournamentService';
+import matchService from '../services/matchService';
 import './Dashboard.css';
 
 const Dashboard = () => {
-  const [stats, setStats] = useState({
-    totalAthletes: 0,
-    totalTournaments: 0,
-    upcomingTournaments: 0
-  });
+  const [activeTournament, setActiveTournament] = useState(null);
+  const [matchStats, setMatchStats] = useState({ inProgress: 0, pending: 0, completed: 0 });
   const [loading, setLoading] = useState(true);
-  const [upcomingTournaments, setUpcomingTournaments] = useState([]);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   useEffect(() => {
-    fetchDashboardData();
+    fetchTodayActivity();
   }, []);
 
-  const fetchDashboardData = async () => {
+  const fetchTodayActivity = async () => {
     try {
       setLoading(true);
-      
-      const [athletesRes, tournamentsRes, upcomingRes] = await Promise.all([
-        athleteService.getAllAthletes(),
-        tournamentService.getAllTournaments(),
-        tournamentService.getUpcomingTournaments()
-      ]);
+      setError(null);
 
-      const tournaments = tournamentsRes.data;
+      // Get tournaments happening today
+      const tournamentsRes = await tournamentService.getAllTournaments();
+      const tournaments = tournamentsRes.data || [];
 
-      setStats({
-        totalAthletes: athletesRes.data.length,
-        totalTournaments: tournaments.length,
-        upcomingTournaments: upcomingRes.data.length
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      // Find tournament with today's date and started status
+      const todayTournament = tournaments.find(t => {
+        const tournamentDate = new Date(t.tournamentDate);
+        tournamentDate.setHours(0, 0, 0, 0);
+        return tournamentDate.getTime() === today.getTime() && t.started;
       });
 
-      setUpcomingTournaments(upcomingRes.data.slice(0, 3));
+      if (todayTournament) {
+        setActiveTournament(todayTournament);
+
+        // Get match statistics for active tournament
+        try {
+          const matchesRes = await matchService.getAllMatches();
+          const matches = matchesRes.data || [];
+
+          const inProgress = matches.filter(m => m.status === 'IN_PROGRESS').length;
+          const pending = matches.filter(m => m.status === 'PENDING').length;
+          const completed = matches.filter(m => m.status === 'COMPLETED').length;
+
+          setMatchStats({ inProgress, pending, completed });
+        } catch (err) {
+          console.error('Error fetching match stats:', err);
+          // Don't fail the whole dashboard if matches fail
+        }
+      }
     } catch (err) {
-      console.error('Error fetching dashboard data:', err);
+      console.error('Error fetching today activity:', err);
+      setError(err.message || 'Failed to load dashboard data');
     } finally {
       setLoading(false);
     }
   };
 
-  if (loading) {
-    return <div className="dashboard loading">Loading dashboard...</div>;
-  }
-
+  // Show welcome message even while loading or if there's an error
   return (
     <div className="dashboard">
       <div className="dashboard-header">
-        <h1>🥋 BJJ Tournament Management Dashboard</h1>
-        <p>Welcome to your tournament management system</p>
+        <h1>🥋 BJJ Tournament System</h1>
+        <p>Welcome back, {user?.fullName || user?.username}!</p>
       </div>
 
-      <div className="stats-grid">
-        <div className="stat-card">
-          <div className="stat-icon">👥</div>
-          <div className="stat-content">
-            <div className="stat-value">{stats.totalAthletes}</div>
-            <div className="stat-label">Total Athletes</div>
-          </div>
-          <button 
-            className="stat-action"
-            onClick={() => navigate('/athletes')}
-          >
-            View All →
-          </button>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-icon">🏆</div>
-          <div className="stat-content">
-            <div className="stat-value">{stats.totalTournaments}</div>
-            <div className="stat-label">Total Tournaments</div>
-          </div>
-          <button 
-            className="stat-action"
-            onClick={() => navigate('/tournaments')}
-          >
-            View All →
-          </button>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-icon">📅</div>
-          <div className="stat-content">
-            <div className="stat-value">{stats.upcomingTournaments}</div>
-            <div className="stat-label">Upcoming Tournaments</div>
-          </div>
-          <button
-            className="stat-action"
-            onClick={() => navigate('/tournaments')}
-          >
-            View All →
-          </button>
-        </div>
-      </div>
-
-      <div className="quick-actions">
-        <h2>Quick Actions</h2>
-        <div className="action-buttons">
-          <button
-            className="btn btn-primary"
-            onClick={() => navigate('/athletes/register')}
-          >
-            + Register Athlete
-          </button>
-          <button
-            className="btn btn-primary"
-            onClick={() => navigate('/tournaments/create')}
-          >
-            + Create Tournament
-          </button>
-        </div>
-      </div>
-
-      {upcomingTournaments.length > 0 && (
-        <div className="upcoming-section">
-          <h2>Upcoming Tournaments</h2>
-          <div className="upcoming-list">
-            {upcomingTournaments.map(tournament => (
-              <div key={tournament.id} className="upcoming-item">
-                <div className="upcoming-info">
-                  <h3>{tournament.name}</h3>
-                  <p>📅 {new Date(tournament.tournamentDate).toLocaleDateString()}</p>
-                  <p>📍 {tournament.location}</p>
-                </div>
-                <button 
-                  className="btn btn-small btn-primary"
-                  onClick={() => navigate(`/tournaments/${tournament.id}`)}
-                >
-                  View Details
-                </button>
-              </div>
-            ))}
-          </div>
+      {loading && (
+        <div className="dashboard-loading">
+          <div className="loading-spinner"></div>
         </div>
       )}
+
+      {!loading && activeTournament ? (
+        <div className="active-tournament-section">
+          <div className="section-header">
+            <span className="live-indicator">🔴</span>
+            <h2>ACTIVE NOW</h2>
+          </div>
+
+          <div className="tournament-card active">
+            <div className="tournament-header">
+              <h3>🏆 {activeTournament.name}</h3>
+              <span className="tournament-date">
+                📅 Today • {activeTournament.location}
+              </span>
+            </div>
+
+            <div className="match-stats">
+              <div className="stat-item in-progress">
+                <div className="stat-number">{matchStats.inProgress}</div>
+                <div className="stat-label">In Progress</div>
+              </div>
+              <div className="stat-item pending">
+                <div className="stat-number">{matchStats.pending}</div>
+                <div className="stat-label">Pending</div>
+              </div>
+              <div className="stat-item completed">
+                <div className="stat-number">{matchStats.completed}</div>
+                <div className="stat-label">Completed</div>
+              </div>
+            </div>
+
+            <div className="tournament-actions">
+              <button
+                className="btn btn-primary"
+                onClick={() => navigate('/matches')}
+              >
+                📊 View Matches
+              </button>
+              <button
+                className="btn btn-success"
+                onClick={() => navigate('/brackets')}
+              >
+                🎯 View Brackets
+              </button>
+              <button
+                className="btn btn-secondary"
+                onClick={() => navigate(`/tournaments/${activeTournament.id}`)}
+              >
+                ℹ️ Tournament Details
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 };

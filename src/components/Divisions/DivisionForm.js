@@ -5,10 +5,12 @@ import { BELT_RANKS, AGE_CATEGORIES, GENDER_OPTIONS, BRACKET_TYPES, WEIGHT_CLASS
 import './DivisionForm.css';
 
 const DivisionForm = () => {
-  const { tournamentId } = useParams();
+  const { tournamentId, divisionId } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [originalTournamentId, setOriginalTournamentId] = useState(null);
 
   const [formData, setFormData] = useState({
     beltRank: '',
@@ -19,6 +21,39 @@ const DivisionForm = () => {
   });
 
   const [weightClasses, setWeightClasses] = useState([]);
+
+  // Load existing division data if in edit mode
+  useEffect(() => {
+    if (divisionId) {
+      setIsEditMode(true);
+      fetchDivision();
+    }
+  }, [divisionId]);
+
+  const fetchDivision = async () => {
+    try {
+      setLoading(true);
+      const response = await divisionService.getDivisionById(divisionId);
+      const division = response.data;
+
+      setFormData({
+        beltRank: division.beltRank || '',
+        ageCategory: division.ageCategory || '',
+        gender: division.gender || '',
+        weightClass: division.weightClass || '',
+        bracketType: division.bracketType || 'SINGLE_ELIMINATION'
+      });
+
+      // Store the original tournament ID from the division
+      setOriginalTournamentId(division.tournamentId);
+
+    } catch (err) {
+      setError('Failed to load division data');
+      console.error('Error fetching division:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     // Update weight classes based on selected gender
@@ -52,12 +87,23 @@ const DivisionForm = () => {
     try {
       setLoading(true);
       setError(null);
-      await divisionService.createDivision(tournamentId, formData);
-      alert('Division created successfully!');
-      navigate(`/tournaments/${tournamentId}`);
+
+      if (isEditMode) {
+        // Update existing division
+        await divisionService.updateDivision(divisionId, formData);
+        alert('Division updated successfully!');
+        // Navigate back to the tournament detail page
+        const tournamentIdToUse = tournamentId || originalTournamentId;
+        navigate(`/tournaments/${tournamentIdToUse}`);
+      } else {
+        // Create new division
+        await divisionService.createDivision(tournamentId, formData);
+        alert('Division created successfully!');
+        navigate(`/tournaments/${tournamentId}`);
+      }
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to create division');
-      console.error('Error creating division:', err);
+      setError(err.response?.data?.message || `Failed to ${isEditMode ? 'update' : 'create'} division`);
+      console.error(`Error ${isEditMode ? 'updating' : 'creating'} division:`, err);
     } finally {
       setLoading(false);
     }
@@ -66,8 +112,14 @@ const DivisionForm = () => {
   return (
     <div className="division-form-container">
       <div className="form-header">
-        <h2>Create New Division</h2>
-        <button className="btn btn-secondary" onClick={() => navigate(`/tournaments/${tournamentId}`)}>
+        <h2>{isEditMode ? 'Edit Division' : 'Create New Division'}</h2>
+        <button
+          className="btn btn-secondary"
+          onClick={() => {
+            const tournamentIdToUse = tournamentId || originalTournamentId;
+            navigate(`/tournaments/${tournamentIdToUse}`);
+          }}
+        >
           Cancel
         </button>
       </div>
@@ -193,12 +245,18 @@ const DivisionForm = () => {
             className="btn btn-primary btn-large"
             disabled={loading}
           >
-            {loading ? 'Creating Division...' : 'Create Division'}
+            {loading
+              ? (isEditMode ? 'Updating Division...' : 'Creating Division...')
+              : (isEditMode ? 'Update Division' : 'Create Division')
+            }
           </button>
           <button
             type="button"
             className="btn btn-secondary"
-            onClick={() => navigate(`/tournaments/${tournamentId}`)}
+            onClick={() => {
+              const tournamentIdToUse = tournamentId || originalTournamentId;
+              navigate(`/tournaments/${tournamentIdToUse}`);
+            }}
           >
             Cancel
           </button>

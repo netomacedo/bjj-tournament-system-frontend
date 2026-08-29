@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import matchService from '../../services/matchService';
+import divisionService from '../../services/divisionService';
 import { POINT_VALUES, SUBMISSION_TYPES } from '../../constants';
+import { getMatchDuration } from '../../constants/matchTimes';
 import ConfirmationModal from '../Divisions/ConfirmationModal';
 import './MatchScorer.css';
 
@@ -10,6 +12,7 @@ const MatchScorer = () => {
   const navigate = useNavigate();
 
   const [match, setMatch] = useState(null);
+  const [division, setDivision] = useState(null);
   const [athlete1Points, setAthlete1Points] = useState(0);
   const [athlete2Points, setAthlete2Points] = useState(0);
   const [athlete1Advantages, setAthlete1Advantages] = useState(0);
@@ -22,9 +25,77 @@ const MatchScorer = () => {
   const [modalConfig, setModalConfig] = useState({ isOpen: false });
   const [loading, setLoading] = useState(true);
 
+  // IBJJF Timer state
+  const [matchTime, setMatchTime] = useState(null);
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [timerDuration, setTimerDuration] = useState(null);
+
+  // Timer sync key for localStorage (same as Display)
+  const timerKey = `match_${id}_timer`;
+
   useEffect(() => {
     fetchMatch();
+    loadTimerState(); // Load timer state on mount
   }, [id]);
+
+  // Listen for timer changes from other tabs (Display)
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === timerKey) {
+        loadTimerState();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [timerKey]);
+
+  // Load timer state from localStorage
+  const loadTimerState = () => {
+    try {
+      const stored = localStorage.getItem(timerKey);
+      if (stored) {
+        const timerState = JSON.parse(stored);
+        setMatchTime(timerState.time);
+        setIsTimerRunning(timerState.isRunning);
+      }
+    } catch (err) {
+      console.error('Error loading timer state:', err);
+    }
+  };
+
+  // Save timer state to localStorage
+  const saveTimerState = (time, isRunning) => {
+    try {
+      localStorage.setItem(timerKey, JSON.stringify({
+        time,
+        isRunning,
+        lastUpdate: Date.now()
+      }));
+    } catch (err) {
+      console.error('Error saving timer state:', err);
+    }
+  };
+
+  // Timer countdown effect
+  useEffect(() => {
+    if (!isTimerRunning) return;
+
+    const timer = setInterval(() => {
+      setMatchTime((prevTime) => {
+        if (prevTime <= 0) {
+          setIsTimerRunning(false);
+          saveTimerState(0, false);
+          return 0;
+        }
+        const newTime = prevTime - 1;
+        saveTimerState(newTime, true);
+        return newTime;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [isTimerRunning]);
 
   const fetchMatch = async () => {
     try {
@@ -35,11 +106,70 @@ const MatchScorer = () => {
       setAthlete2Points(matchData.athlete2Points || 0);
       setAthlete1Advantages(matchData.athlete1Advantages || 0);
       setAthlete2Advantages(matchData.athlete2Advantages || 0);
+      setAthlete1Penalties(matchData.athlete1Penalties || 0);
+      setAthlete2Penalties(matchData.athlete2Penalties || 0);
+
+      // Fetch division info to set timer duration
+      if (matchData.divisionId && !division && timerDuration === null) {
+        try {
+          const divisionResponse = await divisionService.getDivisionById(matchData.divisionId);
+          const divisionData = divisionResponse.data;
+          setDivision(divisionData);
+
+          // Set timer duration based on IBJJF rules
+          const duration = getMatchDuration(divisionData);
+          setTimerDuration(duration);
+
+          // Only set initial time if no timer state exists in localStorage
+          const stored = localStorage.getItem(timerKey);
+          if (!stored) {
+            setMatchTime(duration);
+            saveTimerState(duration, false);
+          }
+        } catch (divErr) {
+          console.error('Error fetching division:', divErr);
+          // Set default duration if division fetch fails
+          const defaultDuration = 5 * 60;
+          setTimerDuration(defaultDuration);
+
+          const stored = localStorage.getItem(timerKey);
+          if (!stored) {
+            setMatchTime(defaultDuration);
+            saveTimerState(defaultDuration, false);
+          }
+        }
+      }
     } catch (err) {
       console.error('Error fetching match:', err);
     } finally {
       setLoading(false);
     }
+  };
+
+  // Timer control functions
+  const startTimer = () => {
+    const time = (matchTime === null || matchTime === 0) ? timerDuration : matchTime;
+    setMatchTime(time);
+    setIsTimerRunning(true);
+    saveTimerState(time, true);
+  };
+
+  const pauseTimer = () => {
+    setIsTimerRunning(false);
+    saveTimerState(matchTime, false);
+  };
+
+  const resetTimer = () => {
+    setIsTimerRunning(false);
+    setMatchTime(timerDuration);
+    saveTimerState(timerDuration, false);
+  };
+
+  const formatTime = (seconds) => {
+    if (seconds === null) return '--:--';
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   const autoSaveScore = async (updates) => {
@@ -379,6 +509,39 @@ const MatchScorer = () => {
           </button>
         </div>
       </div>
+
+      {/* IBJJF Match Timer */}
+      {matchTime !== null && !isCompleted && (
+        <div className="match-timer-section">
+          <div className={`match-timer ${matchTime <= 30 ? 'warning' : ''} ${matchTime === 0 ? 'expired' : ''}`}>
+            <div className="timer-label">⏱️ IBJJF Match Time</div>
+            <div className="timer-display">{formatTime(matchTime)}</div>
+            <div className="timer-info">
+              {division && (
+                <small>
+                  {division.beltRank && `${division.beltRank} Belt`}
+                  {division.ageCategory && ` • ${division.ageCategory}`}
+                  {` • ${formatTime(timerDuration)} match`}
+                </small>
+              )}
+            </div>
+            <div className="timer-controls">
+              {!isTimerRunning ? (
+                <button className="btn btn-primary btn-small" onClick={startTimer}>
+                  ▶️ Start
+                </button>
+              ) : (
+                <button className="btn btn-warning btn-small" onClick={pauseTimer}>
+                  ⏸️ Pause
+                </button>
+              )}
+              <button className="btn btn-secondary btn-small" onClick={resetTimer}>
+                🔄 Reset
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="scoreboard">
         <div className="athlete-score">

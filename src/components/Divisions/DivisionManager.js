@@ -70,7 +70,10 @@ const DivisionManager = ({ tournamentId }) => {
               message: 'Matches generated successfully!',
               confirmText: 'OK',
               type: 'success',
-              onConfirm: () => fetchDivisions()
+              onConfirm: () => {
+                setModalConfig({ isOpen: false });
+                fetchDivisions();
+              }
             });
           } catch (err) {
             setModalConfig({
@@ -79,13 +82,57 @@ const DivisionManager = ({ tournamentId }) => {
               message: `Failed to generate matches: ${err.response?.data?.message || err.message}`,
               confirmText: 'OK',
               type: 'danger',
-              onConfirm: () => {}
+              onConfirm: () => {
+                setModalConfig({ isOpen: false });
+              }
             });
             console.error("Error generating matches:", err);
           }
         }
       });
     }
+  };
+
+  const handleEditDivision = (divisionId) => {
+    navigate(`/divisions/edit/${divisionId}`);
+  };
+
+  const handleDeleteDivision = (division) => {
+    setModalConfig({
+      isOpen: true,
+      title: 'Delete Division',
+      message: `Are you sure you want to delete "${division.name}"? This will also delete all matches and related data for this division. This action cannot be undone.`,
+      confirmText: 'Delete Division',
+      type: 'danger',
+      onConfirm: async () => {
+        try {
+          await divisionService.deleteDivision(division.id);
+          setModalConfig({
+            isOpen: true,
+            title: 'Success!',
+            message: 'Division deleted successfully!',
+            confirmText: 'OK',
+            type: 'success',
+            onConfirm: () => {
+              setModalConfig({ isOpen: false });
+              fetchDivisions();
+            }
+          });
+        } catch (err) {
+          setModalConfig({
+            isOpen: true,
+            title: 'Error',
+            message: `Failed to delete division: ${err.response?.data?.message || err.message}`,
+            confirmText: 'OK',
+            type: 'danger',
+            onConfirm: () => {
+              setModalConfig({ isOpen: false });
+            }
+          });
+          console.error("Error deleting division:", err);
+        }
+      }
+    });
   };
 
   const toggleDivision = (divisionId) => {
@@ -272,6 +319,22 @@ const DivisionManager = ({ tournamentId }) => {
                         View Bracket
                       </button>
                     )}
+
+                    <button
+                      className="btn btn-small btn-info"
+                      onClick={() => handleEditDivision(division.id)}
+                    >
+                      <span className="btn-icon">✏️</span>
+                      Edit
+                    </button>
+
+                    <button
+                      className="btn btn-small btn-danger"
+                      onClick={() => handleDeleteDivision(division)}
+                    >
+                      <span className="btn-icon">🗑️</span>
+                      Delete
+                    </button>
                   </div>
 
                   <div className="division-meta">

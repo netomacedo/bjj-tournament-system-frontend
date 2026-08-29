@@ -35,6 +35,9 @@ const divisionService = {
   // Generate matches manually
   generateMatchesManual: (divisionId, matchPairs) =>
     api.post(`/tournaments/divisions/${divisionId}/generate-matches-manual`, matchPairs),
+
+  // Get division rankings (medal positions)
+  getDivisionRankings: (divisionId) => api.get(`/divisions/${divisionId}/rankings`),
 };
 
 export default divisionService;

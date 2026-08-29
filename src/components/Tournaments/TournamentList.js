@@ -84,6 +84,19 @@ const TournamentList = () => {
     }
   };
 
+  const handleDeleteTournament = async (id, name) => {
+    if (window.confirm(`Are you sure you want to delete "${name}"? This will also delete all divisions, matches, and related data. This action cannot be undone.`)) {
+      try {
+        await tournamentService.deleteTournament(id);
+        alert('Tournament deleted successfully');
+        fetchTournaments();
+      } catch (err) {
+        alert('Failed to delete tournament: ' + (err.response?.data?.message || err.message));
+        console.error('Error deleting tournament:', err);
+      }
+    }
+  };
+
   if (loading) {
     return (
       <div className="tournament-list">
@@ -183,16 +196,23 @@ const TournamentList = () => {
                 </div>
 
                 <div className="tournament-actions">
-                  <button 
+                  <button
                     className="btn btn-small btn-secondary"
                     onClick={() => navigate(`/tournaments/${tournament.id}`)}
                   >
                     View Details
                   </button>
-                  
+
+                  <button
+                    className="btn btn-small btn-info"
+                    onClick={() => navigate(`/tournaments/edit/${tournament.id}`)}
+                  >
+                    ✏️ Edit
+                  </button>
+
                   {tournament.status === 'REGISTRATION_OPEN' && (
                     <>
-                      <button 
+                      <button
                         className="btn btn-small btn-warning"
                         onClick={() => handleCloseRegistration(tournament.id)}
                       >
@@ -200,15 +220,22 @@ const TournamentList = () => {
                       </button>
                     </>
                   )}
-                  
+
                   {tournament.status === 'REGISTRATION_CLOSED' && (
-                    <button 
+                    <button
                       className="btn btn-small btn-primary"
                       onClick={() => handleStartTournament(tournament.id)}
                     >
                       Start Tournament
                     </button>
                   )}
+
+                  <button
+                    className="btn btn-small btn-danger"
+                    onClick={() => handleDeleteTournament(tournament.id, tournament.name)}
+                  >
+                    🗑️ Delete
+                  </button>
                 </div>
               </div>
             </div>

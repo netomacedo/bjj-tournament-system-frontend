@@ -17,14 +17,62 @@ const MatchDisplay = () => {
   const [isCountdownRunning, setIsCountdownRunning] = useState(false);
   const [countdownDuration, setCountdownDuration] = useState(null);
 
+  // Timer sync key for localStorage
+  const timerKey = `match_${id}_timer`;
+
   useEffect(() => {
     fetchMatch();
+
+    // Load timer state from localStorage
+    loadTimerState();
+
     const interval = setInterval(() => {
       fetchMatch();
+      loadTimerState(); // Sync timer state
     }, 2000); // Poll every 2 seconds for live updates
+
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  // Listen for timer changes from other tabs
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === timerKey) {
+        loadTimerState();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [timerKey]);
+
+  // Load timer state from localStorage
+  const loadTimerState = () => {
+    try {
+      const stored = localStorage.getItem(timerKey);
+      if (stored) {
+        const timerState = JSON.parse(stored);
+        setCountdownTime(timerState.time);
+        setIsCountdownRunning(timerState.isRunning);
+      }
+    } catch (err) {
+      console.error('Error loading timer state:', err);
+    }
+  };
+
+  // Save timer state to localStorage
+  const saveTimerState = (time, isRunning) => {
+    try {
+      localStorage.setItem(timerKey, JSON.stringify({
+        time,
+        isRunning,
+        lastUpdate: Date.now()
+      }));
+    } catch (err) {
+      console.error('Error saving timer state:', err);
+    }
+  };
 
   // Countdown timer effect
   useEffect(() => {
@@ -34,9 +82,12 @@ const MatchDisplay = () => {
       setCountdownTime((prevTime) => {
         if (prevTime <= 0) {
           setIsCountdownRunning(false);
+          saveTimerState(0, false);
           return 0;
         }
-        return prevTime - 1;
+        const newTime = prevTime - 1;
+        saveTimerState(newTime, true);
+        return newTime;
       });
     }, 1000);
 
@@ -44,20 +95,21 @@ const MatchDisplay = () => {
   }, [isCountdownRunning]);
 
   const handleStartCountdown = () => {
-    if (countdownTime === null || countdownTime === 0) {
-      // Reset to full duration
-      setCountdownTime(countdownDuration);
-    }
+    const time = (countdownTime === null || countdownTime === 0) ? countdownDuration : countdownTime;
+    setCountdownTime(time);
     setIsCountdownRunning(true);
+    saveTimerState(time, true);
   };
 
   const handlePauseCountdown = () => {
     setIsCountdownRunning(false);
+    saveTimerState(countdownTime, false);
   };
 
   const handleResetCountdown = () => {
     setIsCountdownRunning(false);
     setCountdownTime(countdownDuration);
+    saveTimerState(countdownDuration, false);
   };
 
   const fetchMatch = async () => {
@@ -76,12 +128,24 @@ const MatchDisplay = () => {
           // Set countdown duration based on division
           const duration = getMatchDuration(divisionData);
           setCountdownDuration(duration);
-          setCountdownTime(duration);
+
+          // Only set initial time if no timer state exists in localStorage
+          const stored = localStorage.getItem(timerKey);
+          if (!stored) {
+            setCountdownTime(duration);
+            saveTimerState(duration, false);
+          }
         } catch (divErr) {
           console.error('Error fetching division:', divErr);
           // Set default duration if division fetch fails
-          setCountdownDuration(5 * 60); // 5 minutes default
-          setCountdownTime(5 * 60);
+          const defaultDuration = 5 * 60;
+          setCountdownDuration(defaultDuration);
+
+          const stored = localStorage.getItem(timerKey);
+          if (!stored) {
+            setCountdownTime(defaultDuration);
+            saveTimerState(defaultDuration, false);
+          }
         }
       }
 

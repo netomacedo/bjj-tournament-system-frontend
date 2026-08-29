@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import matchService from '../../services/matchService';
 import divisionService from '../../services/divisionService';
+import DivisionRankings from '../Rankings/DivisionRankings';
 import './BracketView.css';
 
 const BracketView = () => {
@@ -284,6 +285,14 @@ const BracketView = () => {
             </div>
           ))}
         </div>
+      )}
+
+      {/* Division Rankings - Show when division has matches */}
+      {divisionId && division && division.matchesGenerated && (
+        <DivisionRankings
+          divisionId={divisionId}
+          divisionName={division.name}
+        />
       )}
     </div>
   );

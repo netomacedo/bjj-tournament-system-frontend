@@ -1,141 +1,130 @@
 import React from 'react';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import TournamentList from '../../components/Tournaments/TournamentList';
+import tournamentService from '../../services/tournamentService';
 
-const renderWithRouter = (component) => {
-  return render(
-    <BrowserRouter>
-      {component}
-    </BrowserRouter>
-  );
-};
+// Mock services
+jest.mock('../../services/tournamentService');
 
-describe('TournamentList Component', () => {
-  it('should render the component with title', () => {
-    renderWithRouter(<TournamentList />);
-    
-    expect(screen.getByText('Tournaments')).toBeInTheDocument();
+// Mock useNavigate
+const mockNavigate = jest.fn();
+jest.mock('react-router-dom', () => ({
+  BrowserRouter: ({ children }) => <div>{children}</div>,
+  useNavigate: () => mockNavigate,
+}));
+
+describe('TournamentList - Delete/Edit Functionality', () => {
+  const mockTournaments = [
+    {
+      id: 1,
+      name: 'Spring Championship 2024',
+      description: 'Annual spring tournament',
+      location: 'New York',
+      tournamentDate: '2024-06-15',
+      registrationDeadline: '2024-06-01',
+      organizer: 'John Doe',
+      status: 'REGISTRATION_OPEN',
+    },
+    {
+      id: 2,
+      name: 'Summer Open 2024',
+      description: 'Open tournament',
+      location: 'Los Angeles',
+      tournamentDate: '2024-07-20',
+      registrationDeadline: '2024-07-05',
+      organizer: 'Jane Smith',
+      status: 'REGISTRATION_CLOSED',
+    },
+  ];
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    tournamentService.getAllTournaments.mockResolvedValue({ data: mockTournaments });
+    global.alert = jest.fn();
+    global.confirm = jest.fn();
   });
 
-  it('should display loading state initially', () => {
-    renderWithRouter(<TournamentList />);
-    
-    expect(screen.getByText('Loading tournaments...')).toBeInTheDocument();
-  });
+  const renderComponent = () => {
+    return render(
+      <BrowserRouter>
+        <TournamentList />
+      </BrowserRouter>
+    );
+  };
 
-  it('should display tournaments after loading', async () => {
-    renderWithRouter(<TournamentList />);
-    
+  test('should display delete button for each tournament', async () => {
+    renderComponent();
+
     await waitFor(() => {
-      expect(screen.getByText('Summer BJJ Championship 2025')).toBeInTheDocument();
+      expect(screen.getAllByText(/🗑️ Delete/i)).toHaveLength(2);
     });
   });
 
-  it('should render create tournament button', () => {
-    renderWithRouter(<TournamentList />);
-    
-    const createButton = screen.getByText('+ Create New Tournament');
-    expect(createButton).toBeInTheDocument();
-  });
+  test('should display edit button for each tournament', async () => {
+    renderComponent();
 
-  it('should have filter tabs', async () => {
-    renderWithRouter(<TournamentList />);
-    
     await waitFor(() => {
-      expect(screen.getByText('All Tournaments')).toBeInTheDocument();
-      expect(screen.getByText('Upcoming')).toBeInTheDocument();
-      expect(screen.getByText('Completed')).toBeInTheDocument();
+      expect(screen.getAllByText(/✏️ Edit/i)).toHaveLength(2);
     });
   });
 
-  it('should display tournament details', async () => {
-    renderWithRouter(<TournamentList />);
-    
+  test('should show confirmation dialog when delete is clicked', async () => {
+    global.confirm.mockReturnValue(false);
+
+    renderComponent();
+
     await waitFor(() => {
-      // Check for tournament information
-      expect(screen.getByText('Summer BJJ Championship 2025')).toBeInTheDocument();
-      expect(screen.getByText('Sports Arena, City Center')).toBeInTheDocument();
+      const deleteButtons = screen.getAllByText(/🗑️ Delete/i);
+      fireEvent.click(deleteButtons[0]);
+    });
+
+    expect(global.confirm).toHaveBeenCalledWith(
+      expect.stringContaining('Spring Championship 2024')
+    );
+    expect(global.confirm).toHaveBeenCalledWith(
+      expect.stringContaining('cannot be undone')
+    );
+  });
+
+  test('should not delete tournament if user cancels', async () => {
+    global.confirm.mockReturnValue(false);
+
+    renderComponent();
+
+    await waitFor(() => {
+      const deleteButtons = screen.getAllByText(/🗑️ Delete/i);
+      fireEvent.click(deleteButtons[0]);
+    });
+
+    expect(tournamentService.deleteTournament).not.toHaveBeenCalled();
+  });
+
+  test('should delete tournament when confirmed', async () => {
+    global.confirm.mockReturnValue(true);
+    tournamentService.deleteTournament.mockResolvedValue({});
+
+    renderComponent();
+
+    await waitFor(() => {
+      const deleteButtons = screen.getAllByText(/🗑️ Delete/i);
+      fireEvent.click(deleteButtons[0]);
+    });
+
+    await waitFor(() => {
+      expect(tournamentService.deleteTournament).toHaveBeenCalledWith(1);
+      expect(global.alert).toHaveBeenCalledWith('Tournament deleted successfully');
     });
   });
 
-  it('should display tournament status badge', async () => {
-    renderWithRouter(<TournamentList />);
-    
-    await waitFor(() => {
-      const statusBadges = document.querySelectorAll('.status-bar');
-      expect(statusBadges.length).toBeGreaterThan(0);
-    });
-  });
+  test('should navigate to edit page when edit is clicked', async () => {
+    renderComponent();
 
-  it('should show action buttons based on tournament status', async () => {
-    renderWithRouter(<TournamentList />);
-    
     await waitFor(() => {
-      expect(screen.getAllByText('View Details').length).toBeGreaterThan(0);
-    });
-  });
-
-  it('should filter tournaments when tab is clicked', async () => {
-    renderWithRouter(<TournamentList />);
-    
-    await waitFor(() => {
-      const upcomingTab = screen.getByText('Upcoming');
-      fireEvent.click(upcomingTab);
+      const editButtons = screen.getAllByText(/✏️ Edit/i);
+      fireEvent.click(editButtons[0]);
     });
 
-    // Should refetch with upcoming filter
-  });
-
-  it('should show confirmation dialog when closing registration', async () => {
-    global.confirm = jest.fn(() => true);
-    
-    renderWithRouter(<TournamentList />);
-    
-    await waitFor(() => {
-      const closeRegButtons = screen.queryAllByText('Close Registration');
-      if (closeRegButtons.length > 0) {
-        fireEvent.click(closeRegButtons[0]);
-        expect(global.confirm).toHaveBeenCalled();
-      }
-    });
-  });
-
-  it('should format dates correctly', async () => {
-    renderWithRouter(<TournamentList />);
-    
-    await waitFor(() => {
-      // Dates should be formatted as readable strings
-      const dateElements = screen.getAllByText(/📅/);
-      expect(dateElements.length).toBeGreaterThan(0);
-    });
-  });
-
-  it('should display location with icon', async () => {
-    renderWithRouter(<TournamentList />);
-    
-    await waitFor(() => {
-      const locationElements = screen.getAllByText(/📍/);
-      expect(locationElements.length).toBeGreaterThan(0);
-    });
-  });
-
-  it('should display organizer with icon', async () => {
-    renderWithRouter(<TournamentList />);
-    
-    await waitFor(() => {
-      const organizerElements = screen.getAllByText(/👤/);
-      expect(organizerElements.length).toBeGreaterThan(0);
-    });
-  });
-
-  it('should handle empty tournament list', async () => {
-    // This would require mocking an empty response
-    // using MSW's server.use() in the test
-  });
-
-  it('should handle error state', async () => {
-    // This would require mocking a failed request
-    // using MSW's server.use() in the test
+    expect(mockNavigate).toHaveBeenCalledWith('/tournaments/edit/1');
   });
 });

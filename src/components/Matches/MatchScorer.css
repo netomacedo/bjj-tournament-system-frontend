@@ -171,3 +171,83 @@
     margin: 1rem 0;
   }
 }
+
+/* IBJJF Match Timer */
+.match-timer-section {
+  margin: 2rem 0;
+  display: flex;
+  justify-content: center;
+}
+
+.match-timer {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 1.5rem 2rem;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+  min-width: 320px;
+}
+
+.match-timer.warning {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  animation: pulse 1s infinite;
+}
+
+.match-timer.expired {
+  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+.timer-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 0.5rem;
+  opacity: 0.95;
+}
+
+.timer-display {
+  font-size: 3.5rem;
+  font-weight: 700;
+  font-family: 'Courier New', monospace;
+  margin: 0.5rem 0;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.timer-info {
+  margin: 0.5rem 0 1rem 0;
+  opacity: 0.9;
+}
+
+.timer-info small {
+  font-size: 0.85rem;
+}
+
+.timer-controls {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.timer-controls .btn-small {
+  padding: 0.5rem 1.25rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  transition: all 0.2s;
+}
+
+.timer-controls .btn-small:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-2px);
+}

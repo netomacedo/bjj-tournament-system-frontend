@@ -5,6 +5,7 @@ import Header from './components/Header/Header';
 import Login from './components/Auth/Login';
 import Register from './components/Auth/Register';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
+import SessionExpiryPopup from './components/SessionExpiryPopup/SessionExpiryPopup';
 import Dashboard from './pages/Dashboard';
 import AthleteList from './components/Athletes/AthleteList';
 import AthleteForm from './components/Athletes/AthleteForm';
@@ -39,6 +40,7 @@ function App() {
               element={
                 <ProtectedRoute>
                   <>
+                    <SessionExpiryPopup />
                     <Header />
                     <main className="main-content">
                       <Routes>
@@ -59,6 +61,7 @@ function App() {
 
                         {/* Division Routes */}
                         <Route path="/tournaments/:tournamentId/divisions/create" element={<DivisionForm />} />
+                        <Route path="/divisions/edit/:divisionId" element={<DivisionForm />} />
                         <Route path="/divisions/:divisionId/athletes" element={<AthleteEnrollment />} />
                         <Route path="/divisions/:divisionId/generate-matches" element={<MatchGenerator />} />
 
