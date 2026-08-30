@@ -107,17 +107,9 @@ const DivisionManager = ({ tournamentId }) => {
       onConfirm: async () => {
         try {
           await divisionService.deleteDivision(division.id);
-          setModalConfig({
-            isOpen: true,
-            title: 'Success!',
-            message: 'Division deleted successfully!',
-            confirmText: 'OK',
-            type: 'success',
-            onConfirm: () => {
-              setModalConfig({ isOpen: false });
-              fetchDivisions();
-            }
-          });
+          // Close modal and refresh immediately
+          setModalConfig({ isOpen: false });
+          fetchDivisions();
         } catch (err) {
           setModalConfig({
             isOpen: true,
