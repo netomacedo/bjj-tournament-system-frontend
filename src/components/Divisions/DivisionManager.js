@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { flushSync } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import divisionService from "../../services/divisionService";
 import ConfirmationModal from "./ConfirmationModal";
@@ -105,12 +106,49 @@ const DivisionManager = ({ tournamentId }) => {
       confirmText: 'Delete Division',
       type: 'danger',
       onConfirm: async () => {
+        console.log('Attempting to delete division:', division.id);
         try {
-          await divisionService.deleteDivision(division.id);
-          // Close modal and refresh immediately
+          const response = await divisionService.deleteDivision(division.id);
+          console.log('Delete response:', response);
+
+          // Close modal
           setModalConfig({ isOpen: false });
-          fetchDivisions();
+
+          // Optimistic update - remove division from UI immediately
+          console.log('Current divisions before delete:', divisions.map(d => ({ id: d.id, name: d.name })));
+          console.log('Deleting division ID:', division.id);
+
+          // Create a completely new array to force React to detect the change
+          const updatedDivisions = divisions.filter(d => d.id !== division.id);
+          console.log('Updated divisions:', updatedDivisions.map(d => ({ id: d.id, name: d.name })));
+
+          // Use flushSync to force immediate synchronous update
+          flushSync(() => {
+            setDivisions([...updatedDivisions]);
+          });
+
+          console.log('State updated with flushSync -', updatedDivisions.length, 'divisions');
+          console.log('Division should be GONE from screen NOW');
+
+          // Show success confirmation
+          setModalConfig({
+            isOpen: true,
+            title: 'Success!',
+            message: `Division "${division.name}" has been deleted successfully.`,
+            confirmText: 'OK',
+            type: 'success',
+            onConfirm: () => {
+              setModalConfig({ isOpen: false });
+            }
+          });
         } catch (err) {
+          console.error("Error deleting division:", err);
+          console.error("Error details:", {
+            message: err.message,
+            response: err.response?.data,
+            status: err.response?.status
+          });
+
           setModalConfig({
             isOpen: true,
             title: 'Error',
@@ -121,7 +159,6 @@ const DivisionManager = ({ tournamentId }) => {
               setModalConfig({ isOpen: false });
             }
           });
-          console.error("Error deleting division:", err);
         }
       }
     });
