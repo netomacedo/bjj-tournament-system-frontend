@@ -112,6 +112,12 @@ const BracketView = () => {
   };
 
   const getRoundName = (roundNumber, totalRounds) => {
+    // For round-robin, all matches are in one round - no finals
+    if (division?.bracketType === 'ROUND_ROBIN') {
+      return 'All Matches';
+    }
+
+    // For elimination brackets, show traditional round names
     if (roundNumber === totalRounds) return 'Final';
     if (roundNumber === totalRounds - 1) return 'Semi-Finals';
     if (roundNumber === totalRounds - 2) return 'Quarter-Finals';

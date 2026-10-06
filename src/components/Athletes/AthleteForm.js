@@ -11,15 +11,12 @@ const AthleteForm = () => {
 
   const [formData, setFormData] = useState({
     name: '',
-    dateOfBirth: '',
+    age: '',
     gender: 'MALE',
     beltRank: 'WHITE',
     weight: '',
-    team: '',
-    coachName: '',
-    email: '',
-    phone: '',
-    experienceNotes: '',
+    team: 'Takedown Martial Arts',
+    coachName: 'Pedro Monteiro',
   });
 
   const [loading, setLoading] = useState(false);
@@ -36,22 +33,15 @@ const AthleteForm = () => {
       setLoading(true);
       const response = await athleteService.getAthleteById(id);
       const athlete = response.data;
-      
-      // Format date for input field
-      const formattedDate = athlete.dateOfBirth ? 
-        new Date(athlete.dateOfBirth).toISOString().split('T')[0] : '';
-      
+
       setFormData({
         name: athlete.name || '',
-        dateOfBirth: formattedDate,
+        age: athlete.age || '',
         gender: athlete.gender || 'MALE',
         beltRank: athlete.beltRank || 'WHITE',
         weight: athlete.weight || '',
-        team: athlete.team || '',
-        coachName: athlete.coachName || '',
-        email: athlete.email || '',
-        phone: athlete.phone || '',
-        experienceNotes: athlete.experienceNotes || '',
+        team: athlete.team || 'Takedown Martial Arts',
+        coachName: athlete.coachName || 'Pedro Monteiro',
       });
     } catch (err) {
       setError('Failed to load athlete data');
@@ -77,6 +67,7 @@ const AthleteForm = () => {
     try {
       const payload = {
         ...formData,
+        age: parseInt(formData.age),
         weight: parseFloat(formData.weight)
       };
 
@@ -95,23 +86,11 @@ const AthleteForm = () => {
     }
   };
 
-  const calculateAge = () => {
-    if (!formData.dateOfBirth) return null;
-    const today = new Date();
-    const birthDate = new Date(formData.dateOfBirth);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    return age;
-  };
-
   return (
     <div className="athlete-form-container">
       <div className="form-header">
         <h2>{isEditMode ? 'Edit Athlete' : 'Register New Athlete'}</h2>
-        <button 
+        <button
           className="btn btn-secondary"
           onClick={() => navigate('/athletes')}
         >
@@ -124,7 +103,7 @@ const AthleteForm = () => {
       <form onSubmit={handleSubmit} className="athlete-form">
         <div className="form-section">
           <h3>Personal Information</h3>
-          
+
           <div className="form-group">
             <label htmlFor="name">Full Name *</label>
             <input
@@ -140,18 +119,18 @@ const AthleteForm = () => {
 
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="dateOfBirth">Date of Birth *</label>
+              <label htmlFor="age">Age *</label>
               <input
-                type="date"
-                id="dateOfBirth"
-                name="dateOfBirth"
-                value={formData.dateOfBirth}
+                type="number"
+                id="age"
+                name="age"
+                value={formData.age}
                 onChange={handleChange}
                 required
+                min="4"
+                max="150"
+                placeholder="Enter age (4-150)"
               />
-              {calculateAge() !== null && (
-                <small className="helper-text">Age: {calculateAge()} years old</small>
-              )}
             </div>
 
             <div className="form-group">
@@ -175,7 +154,7 @@ const AthleteForm = () => {
 
         <div className="form-section">
           <h3>Competition Information</h3>
-          
+
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="beltRank">Belt Rank *</label>
@@ -204,32 +183,17 @@ const AthleteForm = () => {
                 onChange={handleChange}
                 required
                 step="0.1"
-                min="0"
+                min="10"
+                max="250"
                 placeholder="Enter weight in kg"
               />
             </div>
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="experienceNotes">Experience Notes</label>
-            <textarea
-              id="experienceNotes"
-              name="experienceNotes"
-              value={formData.experienceNotes}
-              onChange={handleChange}
-              rows="3"
-              maxLength="500"
-              placeholder="Optional notes about experience, competition history, or special considerations for fair match creation (max 500 characters)"
-            />
-            <small className="helper-text">
-              {formData.experienceNotes.length}/500 characters
-            </small>
           </div>
         </div>
 
         <div className="form-section">
           <h3>Team & Coach</h3>
-          
+
           <div className="form-group">
             <label htmlFor="team">Team/Academy</label>
             <input
@@ -238,8 +202,9 @@ const AthleteForm = () => {
               name="team"
               value={formData.team}
               onChange={handleChange}
-              placeholder="Enter team or academy name"
+              placeholder="Takedown Martial Arts"
             />
+            <small className="helper-text">Default: Takedown Martial Arts</small>
           </div>
 
           <div className="form-group">
@@ -250,52 +215,22 @@ const AthleteForm = () => {
               name="coachName"
               value={formData.coachName}
               onChange={handleChange}
-              placeholder="Enter coach's name"
+              placeholder="Pedro Monteiro"
             />
-          </div>
-        </div>
-
-        <div className="form-section">
-          <h3>Contact Information</h3>
-          
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="email">Email *</label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                required
-                placeholder="athlete@example.com"
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="phone">Phone Number</label>
-              <input
-                type="tel"
-                id="phone"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                placeholder="+1234567890"
-              />
-            </div>
+            <small className="helper-text">Default: Pedro Monteiro</small>
           </div>
         </div>
 
         <div className="form-actions">
-          <button 
-            type="button" 
+          <button
+            type="button"
             className="btn btn-secondary"
             onClick={() => navigate('/athletes')}
           >
             Cancel
           </button>
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="btn btn-primary"
             disabled={loading}
           >

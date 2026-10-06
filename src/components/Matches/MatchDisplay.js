@@ -74,6 +74,14 @@ const MatchDisplay = () => {
     }
   };
 
+  // Stop timer when match is completed
+  useEffect(() => {
+    if (match?.status === 'COMPLETED' && isCountdownRunning) {
+      setIsCountdownRunning(false);
+      saveTimerState(countdownTime, false);
+    }
+  }, [match?.status, isCountdownRunning, countdownTime]);
+
   // Countdown timer effect
   useEffect(() => {
     if (!isCountdownRunning) return;
@@ -200,7 +208,6 @@ const MatchDisplay = () => {
       {/* Header with Division Info */}
       <div className="display-header">
         <div className="division-name">{match.divisionName || 'Division'}</div>
-        <div className="match-number-display">Match #{match.matchNumber || match.id}</div>
         {match.matNumber && <div className="mat-number">Mat {match.matNumber}</div>}
       </div>
 

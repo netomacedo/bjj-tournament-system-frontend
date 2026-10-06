@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { flushSync } from 'react-dom';
 import tournamentService from '../../services/tournamentService';
 import { TOURNAMENT_STATUS } from '../../constants';
+import ConfirmationModal from '../Divisions/ConfirmationModal';
 import './TournamentList.css';
 
 const TournamentList = () => {
@@ -9,6 +11,7 @@ const TournamentList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState('ALL'); // ALL, UPCOMING, COMPLETED
+  const [modalConfig, setModalConfig] = useState({ isOpen: false });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -84,17 +87,59 @@ const TournamentList = () => {
     }
   };
 
-  const handleDeleteTournament = async (id, name) => {
-    if (window.confirm(`Are you sure you want to delete "${name}"? This will also delete all divisions, matches, and related data. This action cannot be undone.`)) {
-      try {
-        await tournamentService.deleteTournament(id);
-        fetchTournaments();
-      } catch (err) {
-        console.error('Error deleting tournament:', err);
-        // Show error to user
-        window.confirm('Failed to delete tournament: ' + (err.response?.data?.message || err.message));
+  const handleDeleteTournament = (tournament) => {
+    setModalConfig({
+      isOpen: true,
+      title: 'Delete Tournament',
+      message: `Are you sure you want to delete "${tournament.name}"? This will also delete all divisions, matches, and related data. This action cannot be undone.`,
+      confirmText: 'Delete Tournament',
+      type: 'danger',
+      onConfirm: async () => {
+        console.log('Attempting to delete tournament:', tournament.id);
+        try {
+          const response = await tournamentService.deleteTournament(tournament.id);
+          console.log('Delete response:', response);
+
+          // Close modal
+          setModalConfig({ isOpen: false });
+
+          // Optimistic update - remove tournament from UI immediately
+          const updatedTournaments = tournaments.filter(t => t.id !== tournament.id);
+
+          // Use flushSync to force immediate synchronous update
+          flushSync(() => {
+            setTournaments([...updatedTournaments]);
+          });
+
+          // Show success confirmation
+          setModalConfig({
+            isOpen: true,
+            title: 'Success!',
+            message: `Tournament "${tournament.name}" has been deleted successfully.`,
+            confirmText: 'OK',
+            type: 'success',
+            onConfirm: () => {
+              setModalConfig({ isOpen: false });
+            }
+          });
+        } catch (err) {
+          console.error("Error deleting tournament:", err);
+          setModalConfig({
+            isOpen: true,
+            title: 'Error',
+            message: `Failed to delete tournament: ${err.response?.data?.message || err.message}`,
+            confirmText: 'OK',
+            type: 'danger',
+            onConfirm: () => {
+              setModalConfig({ isOpen: false });
+            }
+          });
+        }
+      },
+      onCancel: () => {
+        setModalConfig({ isOpen: false });
       }
-    }
+    });
   };
 
   if (loading) {
@@ -232,7 +277,7 @@ const TournamentList = () => {
 
                   <button
                     className="btn btn-small btn-danger"
-                    onClick={() => handleDeleteTournament(tournament.id, tournament.name)}
+                    onClick={() => handleDeleteTournament(tournament)}
                   >
                     🗑️ Delete
                   </button>
@@ -242,6 +287,16 @@ const TournamentList = () => {
           ))}
         </div>
       )}
+
+      <ConfirmationModal
+        isOpen={modalConfig.isOpen}
+        onClose={() => setModalConfig({ isOpen: false })}
+        onConfirm={modalConfig.onConfirm}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        confirmText={modalConfig.confirmText}
+        type={modalConfig.type}
+      />
     </div>
   );
 };
