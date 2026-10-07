@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import divisionService from '../../services/divisionService';
-import { BELT_RANKS, AGE_CATEGORIES, GENDER_OPTIONS, BRACKET_TYPES, WEIGHT_CLASSES_ADULT_MALE, WEIGHT_CLASSES_ADULT_FEMALE } from '../../constants';
+import { BELT_RANKS, AGE_CATEGORIES, GENDER_OPTIONS, BRACKET_TYPES, WEIGHT_CLASSES_ADULT_MALE, WEIGHT_CLASSES_ADULT_FEMALE, WEIGHT_CLASSES_KIDS } from '../../constants';
 import './DivisionForm.css';
 
 const DivisionForm = () => {
@@ -56,8 +56,14 @@ const DivisionForm = () => {
   };
 
   useEffect(() => {
-    // Update weight classes based on selected gender
-    if (formData.gender === 'MALE') {
+    // Update weight classes based on age category and gender
+    const kidsAgeCategories = ['MIGHTY_MITE', 'TINY_TOT', 'WEE_ONE', 'LITTLE_ONE', 'PRE_TEEN'];
+    const isKidsCategory = kidsAgeCategories.includes(formData.ageCategory);
+
+    if (isKidsCategory) {
+      // Use kids weight classes for kids age categories
+      setWeightClasses(WEIGHT_CLASSES_KIDS);
+    } else if (formData.gender === 'MALE') {
       setWeightClasses(WEIGHT_CLASSES_ADULT_MALE);
     } else if (formData.gender === 'FEMALE') {
       setWeightClasses(WEIGHT_CLASSES_ADULT_FEMALE);
@@ -65,7 +71,7 @@ const DivisionForm = () => {
       setWeightClasses([]);
       setFormData(prev => ({ ...prev, weightClass: '' }));
     }
-  }, [formData.gender]);
+  }, [formData.gender, formData.ageCategory]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -89,11 +95,16 @@ const DivisionForm = () => {
       setError(null);
 
       // Prepare data - convert empty string to null for optional fields
-      // and transform weight class to include gender prefix
+      // and transform weight class to include gender prefix for adults only
+      const kidsAgeCategories = ['MIGHTY_MITE', 'TINY_TOT', 'WEE_ONE', 'LITTLE_ONE', 'PRE_TEEN'];
+      const isKidsCategory = kidsAgeCategories.includes(formData.ageCategory);
+
       const submitData = {
         ...formData,
         weightClass: formData.weightClass
-          ? `ADULT_${formData.gender}_${formData.weightClass}`
+          ? (isKidsCategory
+              ? formData.weightClass  // Kids weight classes already have KIDS_ prefix
+              : `ADULT_${formData.gender}_${formData.weightClass}`)  // Adults need gender prefix
           : null
       };
 

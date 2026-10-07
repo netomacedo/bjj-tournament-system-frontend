@@ -74,6 +74,18 @@ export const WEIGHT_CLASSES_ADULT_FEMALE = [
   { value: 'SUPER_HEAVY', label: 'Super Heavy', max: 1000 },
 ];
 
+// Weight Classes - Kids (in kg)
+export const WEIGHT_CLASSES_KIDS = [
+  { value: 'KIDS_20', label: '20 kg', max: 20 },
+  { value: 'KIDS_25', label: '25 kg', max: 25 },
+  { value: 'KIDS_30', label: '30 kg', max: 30 },
+  { value: 'KIDS_35', label: '35 kg', max: 35 },
+  { value: 'KIDS_40', label: '40 kg', max: 40 },
+  { value: 'KIDS_45', label: '45 kg', max: 45 },
+  { value: 'KIDS_50', label: '50 kg', max: 50 },
+  { value: 'KIDS_50_PLUS', label: '50+ kg', max: 1000 },
+];
+
 // Match Status
 export const MATCH_STATUS = [
   { value: 'PENDING', label: 'Pending', color: '#FFA500' },
@@ -134,6 +146,7 @@ export default {
   GENDER_OPTIONS,
   WEIGHT_CLASSES_ADULT_MALE,
   WEIGHT_CLASSES_ADULT_FEMALE,
+  WEIGHT_CLASSES_KIDS,
   MATCH_STATUS,
   TOURNAMENT_STATUS,
   BRACKET_TYPES,
