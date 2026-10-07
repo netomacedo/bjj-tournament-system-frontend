@@ -98,7 +98,10 @@ const AthleteEnrollment = () => {
             message: `${athlete.name} has been enrolled successfully!`,
             confirmText: 'OK',
             type: 'success',
-            onConfirm: () => fetchData()
+            onConfirm: () => {
+              setModalConfig({ isOpen: false });
+              fetchData();
+            }
           });
         } catch (err) {
           setModalConfig({
@@ -107,7 +110,7 @@ const AthleteEnrollment = () => {
             message: `Failed to enroll athlete: ${err.response?.data?.message || err.message}`,
             confirmText: 'OK',
             type: 'danger',
-            onConfirm: () => {}
+            onConfirm: () => setModalConfig({ isOpen: false })
           });
           console.error('Error enrolling athlete:', err);
         }
@@ -132,7 +135,10 @@ const AthleteEnrollment = () => {
             message: `${athlete.name} has been removed from the division.`,
             confirmText: 'OK',
             type: 'success',
-            onConfirm: () => fetchData()
+            onConfirm: () => {
+              setModalConfig({ isOpen: false });
+              fetchData();
+            }
           });
         } catch (err) {
           setModalConfig({
@@ -141,7 +147,7 @@ const AthleteEnrollment = () => {
             message: `Failed to remove athlete: ${err.response?.data?.message || err.message}`,
             confirmText: 'OK',
             type: 'danger',
-            onConfirm: () => {}
+            onConfirm: () => setModalConfig({ isOpen: false })
           });
           console.error('Error removing athlete:', err);
         }
