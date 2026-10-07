@@ -276,7 +276,7 @@ const MatchDisplay = () => {
         {/* VS Divider */}
         <div className="display-vs">VS</div>
 
-        {/* Athlete 2 - Blue Corner */}
+        {/* Athlete 2 - White Corner */}
         <div className={`display-athlete athlete-blue ${match.winnerId === match.athlete2Id ? 'winner' : ''}`}>
           <div className="athlete-header">
             {match.winnerId === match.athlete2Id && <span className="winner-crown">👑</span>}

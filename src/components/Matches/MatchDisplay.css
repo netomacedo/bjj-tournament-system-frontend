@@ -256,11 +256,11 @@
   box-shadow: 0 0 30px rgba(244, 67, 54, 0.4);
 }
 
-/* Blue Corner - Athlete 2 */
+/* White Corner - Athlete 2 */
 .display-athlete.athlete-blue {
-  background: linear-gradient(135deg, rgba(33, 150, 243, 0.2) 0%, rgba(25, 118, 210, 0.15) 100%);
-  border: 4px solid #42a5f5;
-  box-shadow: 0 0 30px rgba(33, 150, 243, 0.4);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.12) 100%);
+  border: 4px solid #ffffff;
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.5);
 }
 
 .display-athlete.winner {
