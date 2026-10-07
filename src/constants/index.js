@@ -26,11 +26,11 @@ export const BELT_RANKS = [
 
 // Age Categories - matching backend exactly
 export const AGE_CATEGORIES = [
-  { value: 'MIGHTY_MITE', label: 'Mighty Mite (4-5 years)', minAge: 4, maxAge: 5, matchDuration: 3 },
+  { value: 'MIGHTY_MITE', label: 'Mighty Mite (4-5 years)', minAge: 4, maxAge: 5, matchDuration: 2 },
   { value: 'TINY_TOT', label: 'Tiny Tot (6-7 years)', minAge: 6, maxAge: 7, matchDuration: 3 },
-  { value: 'WEE_ONE', label: 'Wee One (8-9 years)', minAge: 8, maxAge: 9, matchDuration: 4 },
-  { value: 'LITTLE_ONE', label: 'Little One (10-12 years)', minAge: 10, maxAge: 12, matchDuration: 4 },
-  { value: 'PRE_TEEN', label: 'Pre-Teen (13-15 years)', minAge: 13, maxAge: 15, matchDuration: 5 },
+  { value: 'WEE_ONE', label: 'Wee One (8-9 years)', minAge: 8, maxAge: 9, matchDuration: 3 },
+  { value: 'LITTLE_ONE', label: 'Little One (10-12 years)', minAge: 10, maxAge: 12, matchDuration: 3 },
+  { value: 'PRE_TEEN', label: 'Pre-Teen (13-15 years)', minAge: 13, maxAge: 15, matchDuration: 3 },
   { value: 'JUVENILE', label: 'Juvenile (16-17 years)', minAge: 16, maxAge: 17, matchDuration: 5 },
   { value: 'ADULT', label: 'Adult (18-29 years)', minAge: 18, maxAge: 29, matchDuration: 5 },
   { value: 'MASTER_1', label: 'Master 1 (30-35 years)', minAge: 30, maxAge: 35, matchDuration: 5 },

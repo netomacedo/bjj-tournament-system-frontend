@@ -1,5 +1,7 @@
 // IBJJF Match Times (in seconds)
 
+import { AGE_CATEGORIES } from './index';
+
 // Adult Belt Ranks
 export const ADULT_MATCH_TIMES = {
   'WHITE': 5 * 60,      // 5 minutes
@@ -9,26 +11,9 @@ export const ADULT_MATCH_TIMES = {
   'BLACK': 10 * 60,     // 10 minutes
 };
 
-// Youth Age Categories
-export const YOUTH_MATCH_TIMES = {
-  'MM1': 2 * 60,        // Mighty Mite 1 (4-5 years): 2 minutes
-  'MM2': 2 * 60,        // Mighty Mite 2 (6-7 years): 2 minutes
-  'PW1': 3 * 60,        // Pee Wee 1 (8 years): 3 minutes
-  'PW2': 3 * 60,        // Pee Wee 2 (9 years): 3 minutes
-  'JR1': 3 * 60,        // Junior 1 (10 years): 3 minutes
-  'JR2': 3 * 60,        // Junior 2 (11 years): 3 minutes
-  'T1': 4 * 60,         // Teen 1 (12 years): 4 minutes
-  'T2': 4 * 60,         // Teen 2 (13 years): 4 minutes
-  'T3': 4 * 60,         // Teen 3 (14-15 years): 4 minutes
-};
-
-// Age category patterns for matching
-export const AGE_CATEGORY_PATTERNS = {
-  'MIGHTY_MITE': /mighty\s*mite|mm\d?|4-7|4\s*-?\s*7|5-7|6-7/i,
-  'PEE_WEE': /pee\s*wee|pw\d?|8-9|8\s*years?|9\s*years?/i,
-  'JUNIOR': /junior|jr\d?|10-11|10\s*years?|11\s*years?/i,
-  'TEEN': /teen|t\d?|12-15|12\s*years?|13\s*years?|14\s*years?|15\s*years?/i,
-};
+// Youth categories use a flat duration by age (no belt-based scaling), driven
+// by AGE_CATEGORIES (constants/index.js), which mirrors the backend AgeCategory enum.
+const YOUTH_AGE_CATEGORY_VALUES = ['MIGHTY_MITE', 'TINY_TOT', 'WEE_ONE', 'LITTLE_ONE', 'PRE_TEEN'];
 
 /**
  * Get match duration based on division info
@@ -51,28 +36,14 @@ export const getMatchDuration = (division) => {
     fullDivision: division
   });
 
-  // Check if it's a youth division based on age category
-  if (AGE_CATEGORY_PATTERNS.MIGHTY_MITE.test(ageCategory)) {
-    console.log('[MatchTimes] Matched MIGHTY_MITE - 2 minutes');
-    return YOUTH_MATCH_TIMES.MM1; // 2 minutes
-  }
-  if (AGE_CATEGORY_PATTERNS.PEE_WEE.test(ageCategory)) {
-    console.log('[MatchTimes] Matched PEE_WEE - 3 minutes');
-    return YOUTH_MATCH_TIMES.PW1; // 3 minutes
-  }
-  if (AGE_CATEGORY_PATTERNS.JUNIOR.test(ageCategory)) {
-    console.log('[MatchTimes] Matched JUNIOR - 3 minutes');
-    return YOUTH_MATCH_TIMES.JR1; // 3 minutes
-  }
-  if (AGE_CATEGORY_PATTERNS.TEEN.test(ageCategory)) {
-    console.log('[MatchTimes] Matched TEEN - 4 minutes');
-    return YOUTH_MATCH_TIMES.T1; // 4 minutes
-  }
-
-  // Check for general youth keywords
-  if (/youth|kids?|children|juvenile|crianca/i.test(ageCategory)) {
-    console.log('[MatchTimes] Matched youth keyword - 3 minutes default');
-    return 3 * 60;
+  // Youth divisions use a flat per-category duration (exact match against the
+  // backend-mirrored AGE_CATEGORIES), not belt rank
+  if (YOUTH_AGE_CATEGORY_VALUES.includes(ageCategory)) {
+    const category = AGE_CATEGORIES.find((c) => c.value === ageCategory);
+    if (category) {
+      console.log(`[MatchTimes] Matched ${ageCategory} - ${category.matchDuration} minutes`);
+      return category.matchDuration * 60;
+    }
   }
 
   // Adult division - use belt rank

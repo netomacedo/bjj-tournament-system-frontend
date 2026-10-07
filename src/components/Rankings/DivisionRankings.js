@@ -97,6 +97,9 @@ const DivisionRankings = ({ divisionId, divisionName }) => {
                   <div className="athlete-stats">
                     {silver.wins}W - {silver.losses}L • {silver.totalPoints} pts
                   </div>
+                  {silver.submissionWins > 0 && (
+                    <div className="submission-badge">🔒 {silver.submissionWins} sub{silver.submissionWins > 1 ? 's' : ''}</div>
+                  )}
                 </div>
                 <div className="podium-block podium-second">
                   <span className="position-label">2nd</span>
@@ -114,6 +117,9 @@ const DivisionRankings = ({ divisionId, divisionName }) => {
                   <div className="athlete-stats">
                     {gold.wins}W - {gold.losses}L • {gold.totalPoints} pts
                   </div>
+                  {gold.submissionWins > 0 && (
+                    <div className="submission-badge">🔒 {gold.submissionWins} sub{gold.submissionWins > 1 ? 's' : ''}</div>
+                  )}
                 </div>
                 <div className="podium-block podium-first">
                   <span className="position-label">1st</span>
@@ -121,27 +127,25 @@ const DivisionRankings = ({ divisionId, divisionName }) => {
               </div>
             )}
 
-            {/* Bronze - 3rd Place */}
-            {bronzes.length > 0 && (
-              <div className="podium-place bronze-place">
+            {/* Bronze - 3rd Place (one full podium card per bronze medalist) */}
+            {bronzes.map((bronze, index) => (
+              <div className="podium-place bronze-place" key={bronze.athleteId ?? index}>
                 <div className="medal-icon">{getMedalEmoji('BRONZE')}</div>
                 <div className="athlete-info">
-                  <div className="athlete-name">{bronzes[0].athleteName}</div>
-                  {bronzes[0].team && <div className="athlete-team">{bronzes[0].team}</div>}
+                  <div className="athlete-name">{bronze.athleteName}</div>
+                  {bronze.team && <div className="athlete-team">{bronze.team}</div>}
                   <div className="athlete-stats">
-                    {bronzes[0].wins}W - {bronzes[0].losses}L • {bronzes[0].totalPoints} pts
+                    {bronze.wins}W - {bronze.losses}L • {bronze.totalPoints} pts
                   </div>
-                  {bronzes.length > 1 && (
-                    <div className="also-bronze">
-                      & {bronzes[1].athleteName}
-                    </div>
+                  {bronze.submissionWins > 0 && (
+                    <div className="submission-badge">🔒 {bronze.submissionWins} sub{bronze.submissionWins > 1 ? 's' : ''}</div>
                   )}
                 </div>
                 <div className="podium-block podium-third">
                   <span className="position-label">3rd</span>
                 </div>
               </div>
-            )}
+            ))}
           </div>
         </div>
       )}
@@ -157,6 +161,7 @@ const DivisionRankings = ({ divisionId, divisionName }) => {
               <th>Athlete</th>
               <th>Team</th>
               <th>Record</th>
+              <th>Submissions</th>
               <th>Points</th>
             </tr>
           </thead>
@@ -175,6 +180,9 @@ const DivisionRankings = ({ divisionId, divisionName }) => {
                 <td className="team-cell">{ranking.team || '-'}</td>
                 <td className="record-cell">
                   {ranking.wins}W - {ranking.losses}L
+                </td>
+                <td className="submissions-cell">
+                  {ranking.submissionWins > 0 ? `🔒 ${ranking.submissionWins}` : '-'}
                 </td>
                 <td className="points-cell">{ranking.totalPoints}</td>
               </tr>
