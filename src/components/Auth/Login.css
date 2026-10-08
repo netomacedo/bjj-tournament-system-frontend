@@ -94,6 +94,22 @@
   color: #c33;
 }
 
+.alert-success {
+  background-color: #efe;
+  border: 1px solid #cfc;
+  color: #2a7;
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: #4a90d9;
+  cursor: pointer;
+  font-size: inherit;
+  padding: 0;
+  text-decoration: underline;
+}
+
 .alert-icon {
   font-size: 1.25rem;
 }

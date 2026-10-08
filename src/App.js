@@ -3,8 +3,9 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider } from './context/AuthContext';
 import Header from './components/Header/Header';
 import Login from './components/Auth/Login';
-import Register from './components/Auth/Register';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
+import AdminRoute from './components/Auth/AdminRoute';
+import AddUser from './components/Admin/AddUser';
 import SessionExpiryPopup from './components/SessionExpiryPopup/SessionExpiryPopup';
 import Dashboard from './pages/Dashboard';
 import AthleteList from './components/Athletes/AthleteList';
@@ -29,7 +30,6 @@ function App() {
           <Routes>
             {/* Public Routes */}
             <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
 
             {/* Public Display Route - no authentication needed for big screen */}
             <Route path="/display/:id" element={<MatchDisplay />} />
@@ -46,6 +46,9 @@ function App() {
                       <Routes>
                         <Route path="/" element={<Navigate to="/dashboard" replace />} />
                         <Route path="/dashboard" element={<Dashboard />} />
+
+                        {/* Admin Routes */}
+                        <Route path="/admin/users/new" element={<AdminRoute><AddUser /></AdminRoute>} />
 
                         {/* Athlete Routes */}
                         <Route path="/athletes" element={<AthleteList />} />

@@ -1,16 +1,27 @@
 import axios from 'axios';
+import api from './api';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
 const AUTH_URL = `${API_URL}/auth`;
 
 class AuthService {
-  // Register new user
+  // Register new user (public self-registration - kept for completeness,
+  // but the backend now rejects this unless called with an admin token)
   async register(userData) {
     const response = await axios.post(`${AUTH_URL}/register`, userData);
     if (response.data.token) {
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data));
     }
+    return response.data;
+  }
+
+  // Create a new user as an admin. Uses the shared `api` instance so the
+  // logged-in admin's token is attached, and deliberately does NOT touch
+  // localStorage - the response contains the NEW user's token, which must
+  // not overwrite the admin's own session.
+  async createUser(userData) {
+    const response = await api.post('/auth/register', userData);
     return response.data;
   }
 

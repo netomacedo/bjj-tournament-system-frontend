@@ -35,6 +35,11 @@ const Header = () => {
           <Link to="/tournaments" className={isActive('/tournaments')}>
             Tournaments
           </Link>
+          {user?.role === 'ROLE_ADMIN' && (
+            <Link to="/admin/users/new" className={isActive('/admin/users/new')}>
+              Add User
+            </Link>
+          )}
         </nav>
         <div className="user-menu">
           {user && (
