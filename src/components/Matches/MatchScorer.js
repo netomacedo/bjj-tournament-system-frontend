@@ -544,7 +544,7 @@ const MatchScorer = () => {
       )}
 
       <div className="scoreboard">
-        <div className="athlete-score">
+        <div className="athlete-score corner-red">
           <h3>{match.athlete1Name || 'Athlete 1'}</h3>
           <div className="score-display">
             <div className="points">{athlete1Points}</div>
@@ -581,7 +581,7 @@ const MatchScorer = () => {
 
         <div className="vs-divider">VS</div>
 
-        <div className="athlete-score">
+        <div className="athlete-score corner-white">
           <h3>{match.athlete2Name || 'Athlete 2'}</h3>
           <div className="score-display">
             <div className="points">{athlete2Points}</div>
