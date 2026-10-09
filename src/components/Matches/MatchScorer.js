@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import matchService from '../../services/matchService';
 import divisionService from '../../services/divisionService';
@@ -24,6 +24,14 @@ const MatchScorer = () => {
   const [submissionType, setSubmissionType] = useState('');
   const [modalConfig, setModalConfig] = useState({ isOpen: false });
   const [loading, setLoading] = useState(true);
+
+  // Tracks whether the initial match fetch has populated score state, so the
+  // auto-save effect below doesn't fire on that initial load. Also debounces
+  // auto-save itself so rapid clicks on score buttons don't fire a flood of
+  // concurrent save requests (which raced against the match's optimistic
+  // locking and could overwhelm the UI with error modals).
+  const hasLoadedScoreRef = useRef(false);
+  const saveTimeoutRef = useRef(null);
 
   // IBJJF Timer state
   const [matchTime, setMatchTime] = useState(null);
@@ -108,6 +116,7 @@ const MatchScorer = () => {
       setAthlete2Advantages(matchData.athlete2Advantages || 0);
       setAthlete1Penalties(matchData.athlete1Penalties || 0);
       setAthlete2Penalties(matchData.athlete2Penalties || 0);
+      hasLoadedScoreRef.current = true;
 
       // Fetch division info to set timer duration
       if (matchData.divisionId && !division && timerDuration === null) {
@@ -192,81 +201,56 @@ const MatchScorer = () => {
   const addPoints = (athlete, pointType) => {
     const points = POINT_VALUES[pointType];
     if (athlete === 1) {
-      const newPoints = athlete1Points + points;
-      setAthlete1Points(newPoints);
-      autoSaveScore({
-        athlete1Points: newPoints,
-        athlete2Points,
-        athlete1Advantages,
-        athlete2Advantages,
-        athlete1Penalties,
-        athlete2Penalties
-      });
+      setAthlete1Points((prev) => prev + points);
     } else {
-      const newPoints = athlete2Points + points;
-      setAthlete2Points(newPoints);
-      autoSaveScore({
-        athlete1Points,
-        athlete2Points: newPoints,
-        athlete1Advantages,
-        athlete2Advantages,
-        athlete1Penalties,
-        athlete2Penalties
-      });
+      setAthlete2Points((prev) => prev + points);
     }
   };
 
   const addAdvantage = (athlete) => {
     if (athlete === 1) {
-      const newAdvantages = athlete1Advantages + 1;
-      setAthlete1Advantages(newAdvantages);
-      autoSaveScore({
-        athlete1Points,
-        athlete2Points,
-        athlete1Advantages: newAdvantages,
-        athlete2Advantages,
-        athlete1Penalties,
-        athlete2Penalties
-      });
+      setAthlete1Advantages((prev) => prev + 1);
     } else {
-      const newAdvantages = athlete2Advantages + 1;
-      setAthlete2Advantages(newAdvantages);
-      autoSaveScore({
-        athlete1Points,
-        athlete2Points,
-        athlete1Advantages,
-        athlete2Advantages: newAdvantages,
-        athlete1Penalties,
-        athlete2Penalties
-      });
+      setAthlete2Advantages((prev) => prev + 1);
     }
   };
 
   const addPenalty = (athlete) => {
     if (athlete === 1) {
-      const newPenalties = athlete1Penalties + 1;
-      setAthlete1Penalties(newPenalties);
-      autoSaveScore({
-        athlete1Points,
-        athlete2Points,
-        athlete1Advantages,
-        athlete2Advantages,
-        athlete1Penalties: newPenalties,
-        athlete2Penalties
-      });
+      setAthlete1Penalties((prev) => prev + 1);
     } else {
-      const newPenalties = athlete2Penalties + 1;
-      setAthlete2Penalties(newPenalties);
+      setAthlete2Penalties((prev) => prev + 1);
+    }
+  };
+
+  // Debounced auto-save: rapid clicks only update local state instantly
+  // (via the functional setState calls above, so they always accumulate
+  // correctly regardless of click speed); the actual save to the backend
+  // waits until clicking pauses for a moment, so a burst of clicks sends
+  // one request with the final totals instead of one request per click.
+  useEffect(() => {
+    if (!hasLoadedScoreRef.current) {
+      return;
+    }
+
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+
+    saveTimeoutRef.current = setTimeout(() => {
       autoSaveScore({
         athlete1Points,
         athlete2Points,
         athlete1Advantages,
         athlete2Advantages,
         athlete1Penalties,
-        athlete2Penalties: newPenalties
+        athlete2Penalties
       });
-    }
-  };
+    }, 500);
+
+    return () => clearTimeout(saveTimeoutRef.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [athlete1Points, athlete2Points, athlete1Advantages, athlete2Advantages, athlete1Penalties, athlete2Penalties]);
 
   const saveScore = async () => {
     try {
