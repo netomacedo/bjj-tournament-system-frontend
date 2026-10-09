@@ -4,6 +4,8 @@ import divisionService from '../../services/divisionService';
 import { BELT_RANKS, AGE_CATEGORIES, GENDER_OPTIONS, BRACKET_TYPES, WEIGHT_CLASSES_ADULT_MALE, WEIGHT_CLASSES_ADULT_FEMALE, WEIGHT_CLASSES_KIDS } from '../../constants';
 import './DivisionForm.css';
 
+const KIDS_AGE_CATEGORIES = ['MIGHTY_MITE', 'TINY_TOT', 'WEE_ONE', 'LITTLE_ONE', 'PRE_TEEN'];
+
 const DivisionForm = () => {
   const { tournamentId, divisionId } = useParams();
   const navigate = useNavigate();
@@ -36,11 +38,21 @@ const DivisionForm = () => {
       const response = await divisionService.getDivisionById(divisionId);
       const division = response.data;
 
+      // Adult weight classes are stored with an "ADULT_<GENDER>_" prefix
+      // (e.g. "ADULT_MALE_MEDIUM_HEAVY"), but the weight class dropdown's
+      // options use the short form (e.g. "MEDIUM_HEAVY") - strip it back off
+      // here so the dropdown shows the right selection, and so submitting
+      // the form again doesn't re-add the prefix on top of itself.
+      const isKidsCategory = KIDS_AGE_CATEGORIES.includes(division.ageCategory);
+      const weightClass = (!isKidsCategory && division.weightClass)
+        ? division.weightClass.replace(/^ADULT_(MALE|FEMALE)_/, '')
+        : (division.weightClass || '');
+
       setFormData({
         beltRank: division.beltRank || '',
         ageCategory: division.ageCategory || '',
         gender: division.gender || '',
-        weightClass: division.weightClass || '',
+        weightClass,
         bracketType: division.bracketType || 'SINGLE_ELIMINATION'
       });
 
@@ -57,8 +69,7 @@ const DivisionForm = () => {
 
   useEffect(() => {
     // Update weight classes based on age category and gender
-    const kidsAgeCategories = ['MIGHTY_MITE', 'TINY_TOT', 'WEE_ONE', 'LITTLE_ONE', 'PRE_TEEN'];
-    const isKidsCategory = kidsAgeCategories.includes(formData.ageCategory);
+    const isKidsCategory = KIDS_AGE_CATEGORIES.includes(formData.ageCategory);
 
     if (isKidsCategory) {
       // Use kids weight classes for kids age categories
@@ -96,8 +107,7 @@ const DivisionForm = () => {
 
       // Prepare data - convert empty string to null for optional fields
       // and transform weight class to include gender prefix for adults only
-      const kidsAgeCategories = ['MIGHTY_MITE', 'TINY_TOT', 'WEE_ONE', 'LITTLE_ONE', 'PRE_TEEN'];
-      const isKidsCategory = kidsAgeCategories.includes(formData.ageCategory);
+      const isKidsCategory = KIDS_AGE_CATEGORIES.includes(formData.ageCategory);
 
       const submitData = {
         ...formData,
