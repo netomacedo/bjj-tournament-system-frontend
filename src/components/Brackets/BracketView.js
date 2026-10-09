@@ -190,7 +190,10 @@ const BracketView = () => {
             </div>
           )}
         </div>
-        <button className="btn btn-secondary" onClick={() => navigate(-1)}>
+        <button
+          className="btn btn-secondary"
+          onClick={() => navigate(division ? `/tournaments/${division.tournamentId}` : '/tournaments')}
+        >
           ← Back
         </button>
       </div>

@@ -102,24 +102,6 @@ const MatchDisplay = () => {
     return () => clearInterval(countdown);
   }, [isCountdownRunning]);
 
-  const handleStartCountdown = () => {
-    const time = (countdownTime === null || countdownTime === 0) ? countdownDuration : countdownTime;
-    setCountdownTime(time);
-    setIsCountdownRunning(true);
-    saveTimerState(time, true);
-  };
-
-  const handlePauseCountdown = () => {
-    setIsCountdownRunning(false);
-    saveTimerState(countdownTime, false);
-  };
-
-  const handleResetCountdown = () => {
-    setIsCountdownRunning(false);
-    setCountdownTime(countdownDuration);
-    saveTimerState(countdownDuration, false);
-  };
-
   const fetchMatch = async () => {
     try {
       const response = await matchService.getMatchById(id);
@@ -225,20 +207,6 @@ const MatchDisplay = () => {
             <div className="timer-label">⏱️ IBJJF Match Time</div>
             <div className="timer-value countdown-value">
               {formatTime(countdownTime)}
-            </div>
-            <div className="timer-controls">
-              {!isCountdownRunning ? (
-                <button className="timer-btn start-btn" onClick={handleStartCountdown}>
-                  ▶️ Start
-                </button>
-              ) : (
-                <button className="timer-btn pause-btn" onClick={handlePauseCountdown}>
-                  ⏸️ Pause
-                </button>
-              )}
-              <button className="timer-btn reset-btn" onClick={handleResetCountdown}>
-                🔄 Reset
-              </button>
             </div>
           </div>
         </div>
