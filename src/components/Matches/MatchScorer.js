@@ -494,7 +494,7 @@ const MatchScorer = () => {
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           <button
             className="btn btn-success"
-            onClick={() => window.open(`/display/${match.id}`, '_blank')}
+            onClick={() => window.open(`${window.location.origin}/display/${match.id}`, '_blank')}
             title="Open display view in new window for big screen"
           >
             📺 Open Display
