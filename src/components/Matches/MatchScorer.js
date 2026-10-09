@@ -287,6 +287,41 @@ const MatchScorer = () => {
     setShowSubmissionModal(true);
   };
 
+  const handleWalkover = (athleteNumber) => {
+    const winnerId = athleteNumber === 1 ? match.athlete1Id : match.athlete2Id;
+    const winnerName = athleteNumber === 1 ? match.athlete1Name : match.athlete2Name;
+
+    setModalConfig({
+      isOpen: true,
+      title: 'Walkover Win',
+      message: `Award a walkover win to ${winnerName || `Athlete ${athleteNumber}`}? Use this when the opponent doesn't show up.`,
+      confirmText: 'Confirm Walkover',
+      type: 'warning',
+      onConfirm: async () => {
+        try {
+          await matchService.recordWalkover(id, { winnerId });
+          setModalConfig({
+            isOpen: true,
+            title: 'Success!',
+            message: `Walkover recorded. ${winnerName || `Athlete ${athleteNumber}`} wins.`,
+            confirmText: 'OK',
+            type: 'success',
+            onConfirm: () => navigate('/matches?divisionId=' + match.divisionId)
+          });
+        } catch (err) {
+          setModalConfig({
+            isOpen: true,
+            title: 'Error',
+            message: 'Failed to record walkover: ' + (err.response?.data?.message || err.message),
+            confirmText: 'OK',
+            type: 'danger',
+            onConfirm: () => setModalConfig({ isOpen: false })
+          });
+        }
+      }
+    });
+  };
+
   const recordSubmission = async () => {
     if (!submissionType) {
       setModalConfig({
@@ -458,8 +493,9 @@ const MatchScorer = () => {
   if (loading) return <div className="loading">Loading match...</div>;
   if (!match) return <div className="error">Match not found</div>;
 
-  // Check if match is completed
-  const isCompleted = match.status && match.status.toUpperCase() === 'COMPLETED';
+  // Check if match is completed (a walkover also finishes the match)
+  const matchStatusUpper = match.status && match.status.toUpperCase();
+  const isCompleted = matchStatusUpper === 'COMPLETED' || matchStatusUpper === 'WALKOVER';
 
   return (
     <div className="match-scorer">
@@ -560,6 +596,9 @@ const MatchScorer = () => {
             <button className="btn btn-small btn-danger" onClick={() => handleSubmission(1)}>
               🎯 Submission Win
             </button>
+            <button className="btn btn-small btn-secondary" onClick={() => handleWalkover(1)}>
+              🚫 Walkover Win
+            </button>
           </div>
         </div>
 
@@ -596,6 +635,9 @@ const MatchScorer = () => {
             </button>
             <button className="btn btn-small btn-danger" onClick={() => handleSubmission(2)}>
               🎯 Submission Win
+            </button>
+            <button className="btn btn-small btn-secondary" onClick={() => handleWalkover(2)}>
+              🚫 Walkover Win
             </button>
           </div>
         </div>

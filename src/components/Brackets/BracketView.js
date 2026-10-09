@@ -100,7 +100,7 @@ const BracketView = () => {
     // Backend uses status property with uppercase values: PENDING, IN_PROGRESS, COMPLETED
     if (match.status) {
       const status = match.status.toUpperCase();
-      if (status === 'COMPLETED') return 'completed';
+      if (status === 'COMPLETED' || status === 'WALKOVER') return 'completed';
       if (status === 'IN_PROGRESS') return 'in-progress';
       if (status === 'PENDING') return 'pending';
     }
