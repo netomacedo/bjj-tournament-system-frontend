@@ -60,20 +60,19 @@ const MatchList = () => {
       confirmText: 'Start Match',
       type: 'primary',
       onConfirm: async () => {
+        // Open the display tab synchronously, before the `await` below - most
+        // browsers only allow window.open() as a direct result of the click
+        // that triggered this handler, and silently block it once an async
+        // gap (like awaiting the API call) breaks that connection.
+        const displayWindow = window.open(`${window.location.origin}/display/${match.id}`, '_blank');
         try {
           await matchService.startMatch(match.id);
-          setModalConfig({
-            isOpen: true,
-            title: 'Success!',
-            message: 'Match started successfully!',
-            confirmText: 'OK',
-            type: 'success',
-            onConfirm: () => {
-              setModalConfig({ isOpen: false });
-              fetchData();
-            }
-          });
+          setModalConfig({ isOpen: false });
+          navigate(`/matches/${match.id}/score`);
         } catch (err) {
+          if (displayWindow) {
+            displayWindow.close();
+          }
           console.error('Start match error:', err);
           console.error('Error response:', err.response);
           console.error('Error response data:', err.response?.data);

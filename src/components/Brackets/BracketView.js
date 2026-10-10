@@ -232,15 +232,31 @@ const BracketView = () => {
                   const status = getMatchStatusClass(match);
                   const isCompleted = status === 'completed';
                   const isInProgress = status === 'in-progress';
+                  const isPending = status === 'pending';
 
                   return (
                     <div
                       key={match.id}
                       className={`bracket-match ${status}`}
-                      onClick={() => {
-                        // Navigate to match scorer for in-progress matches, matches list for others
+                      onClick={async () => {
                         if (isInProgress) {
+                          // Already started - just open the display and go score it
+                          window.open(`${window.location.origin}/display/${match.id}`, '_blank');
                           navigate(`/matches/${match.id}/score`);
+                        } else if (isPending) {
+                          // Open the display tab synchronously (before the await below),
+                          // otherwise most browsers block it as a popup once the async
+                          // gap breaks the connection to this click.
+                          const displayWindow = window.open(`${window.location.origin}/display/${match.id}`, '_blank');
+                          try {
+                            await matchService.startMatch(match.id);
+                            navigate(`/matches/${match.id}/score`);
+                          } catch (err) {
+                            if (displayWindow) {
+                              displayWindow.close();
+                            }
+                            alert('Failed to start match: ' + (err.response?.data?.message || err.message));
+                          }
                         } else {
                           navigate(`/matches?divisionId=${divisionId}`);
                         }
