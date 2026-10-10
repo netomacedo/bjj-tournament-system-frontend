@@ -32,7 +32,9 @@ const TournamentList = () => {
       let data = response.data;
       
       if (filter === 'COMPLETED') {
-        data = data.filter(t => t.status === 'COMPLETED');
+        // Tournament has no "status" field - "completed" is the real boolean
+        // the backend returns (this filter always matched nothing before).
+        data = data.filter(t => t.completed === true);
       }
       
       setTournaments(data);
@@ -43,6 +45,20 @@ const TournamentList = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Tournament has no "status" field on the backend - its lifecycle is three
+  // independent booleans (registrationOpen, started, completed). Derive the
+  // equivalent status string client-side so the existing TOURNAMENT_STATUS
+  // badge/label lookups and the Close Registration / Start Tournament button
+  // gates (which compare against this derived value) actually work - they
+  // previously compared against tournament.status, which was always
+  // undefined, so those buttons never rendered.
+  const getComputedStatus = (tournament) => {
+    if (tournament.completed) return 'COMPLETED';
+    if (tournament.started) return 'IN_PROGRESS';
+    if (tournament.registrationOpen) return 'REGISTRATION_OPEN';
+    return 'REGISTRATION_CLOSED';
   };
 
   const getStatusColor = (status) => {
@@ -202,9 +218,9 @@ const TournamentList = () => {
             <div key={tournament.id} className="tournament-card">
               <div 
                 className="status-bar"
-                style={{ backgroundColor: getStatusColor(tournament.status) }}
+                style={{ backgroundColor: getStatusColor(getComputedStatus(tournament)) }}
               >
-                <span className="status-label">{getStatusLabel(tournament.status)}</span>
+                <span className="status-label">{getStatusLabel(getComputedStatus(tournament))}</span>
               </div>
               
               <div className="tournament-content">
@@ -255,7 +271,7 @@ const TournamentList = () => {
                     ✏️ Edit
                   </button>
 
-                  {tournament.status === 'REGISTRATION_OPEN' && (
+                  {getComputedStatus(tournament) === 'REGISTRATION_OPEN' && (
                     <>
                       <button
                         className="btn btn-small btn-warning"
@@ -266,7 +282,7 @@ const TournamentList = () => {
                     </>
                   )}
 
-                  {tournament.status === 'REGISTRATION_CLOSED' && (
+                  {getComputedStatus(tournament) === 'REGISTRATION_CLOSED' && (
                     <button
                       className="btn btn-small btn-primary"
                       onClick={() => handleStartTournament(tournament.id)}
