@@ -320,7 +320,7 @@ const DivisionManager = ({ tournamentId }) => {
                             handleGenerateMatches(division.id, false)
                           }
                           disabled={
-                            (division.athleteCount || division.athletes?.length || 0) < 2
+                            (division.athleteCount || division.athletes?.length || 0) < 1
                           }
                         >
                           <span className="btn-icon">⚡</span>
