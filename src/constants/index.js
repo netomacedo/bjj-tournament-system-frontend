@@ -106,9 +106,13 @@ export const TOURNAMENT_STATUS = [
 ];
 
 // Bracket Types
+// DOUBLE_ELIMINATION intentionally omitted: the backend currently generates
+// it identically to single elimination (no losers bracket implemented yet -
+// see BracketService.generateDoubleEliminationBracket), so it's hidden here
+// to avoid anyone unknowingly picking a format that doesn't work as named.
+// Re-add once a real losers-bracket implementation exists.
 export const BRACKET_TYPES = [
   { value: 'SINGLE_ELIMINATION', label: 'Single Elimination' },
-  { value: 'DOUBLE_ELIMINATION', label: 'Double Elimination' },
   { value: 'ROUND_ROBIN', label: 'Round Robin' },
 ];
 

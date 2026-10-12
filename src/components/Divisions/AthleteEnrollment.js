@@ -83,39 +83,22 @@ const AthleteEnrollment = () => {
   };
 
   const handleEnroll = async (athlete) => {
-    setModalConfig({
-      isOpen: true,
-      title: 'Enroll Athlete',
-      message: `Enroll ${athlete.name} in this division?`,
-      confirmText: 'Enroll',
-      type: 'primary',
-      onConfirm: async () => {
-        try {
-          await divisionService.enrollAthlete(divisionId, athlete.id);
-          setModalConfig({
-            isOpen: true,
-            title: 'Success!',
-            message: `${athlete.name} has been enrolled successfully!`,
-            confirmText: 'OK',
-            type: 'success',
-            onConfirm: () => {
-              setModalConfig({ isOpen: false });
-              fetchData();
-            }
-          });
-        } catch (err) {
-          setModalConfig({
-            isOpen: true,
-            title: 'Error',
-            message: `Failed to enroll athlete: ${err.response?.data?.message || err.message}`,
-            confirmText: 'OK',
-            type: 'danger',
-            onConfirm: () => setModalConfig({ isOpen: false })
-          });
-          console.error('Error enrolling athlete:', err);
-        }
-      }
-    });
+    // No confirmation dialog - enrolling is low-friction and easily reversible
+    // via the Remove action, so just do it immediately on click.
+    try {
+      await divisionService.enrollAthlete(divisionId, athlete.id);
+      fetchData();
+    } catch (err) {
+      setModalConfig({
+        isOpen: true,
+        title: 'Error',
+        message: `Failed to enroll athlete: ${err.response?.data?.message || err.message}`,
+        confirmText: 'OK',
+        type: 'danger',
+        onConfirm: () => setModalConfig({ isOpen: false })
+      });
+      console.error('Error enrolling athlete:', err);
+    }
   };
 
   const handleRemove = async (athlete) => {
