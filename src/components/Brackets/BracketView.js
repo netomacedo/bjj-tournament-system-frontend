@@ -111,16 +111,27 @@ const BracketView = () => {
     return 'pending';
   };
 
-  const getRoundName = (roundNumber, totalRounds) => {
+  const getRoundName = (roundNumber, totalRounds, realMatchCount) => {
     // For round-robin, all matches are in one round - no finals
     if (division?.bracketType === 'ROUND_ROBIN') {
       return 'All Matches';
     }
 
-    // For elimination brackets, show traditional round names
-    if (roundNumber === totalRounds) return 'Final';
-    if (roundNumber === totalRounds - 1) return 'Semi-Finals';
-    if (roundNumber === totalRounds - 2) return 'Quarter-Finals';
+    // A round only earns "Final"/"Semi-Finals"/"Quarter-Finals" when BOTH
+    // its distance from the last round AND its real-match count (an actual
+    // opponent, not a bye) match what that name traditionally implies.
+    // Distance-from-final alone isn't enough: a bye-heavy bracket (e.g. 5
+    // athletes) can have a round 1 before the true final, distance-wise,
+    // but with only 2 real matches rather than the 4 "Quarter-Finals"
+    // implies. Real-match-count alone isn't enough either: with byes
+    // involved, two different rounds can both have exactly 1 real match
+    // (only one of which is the actual final), so without the distance
+    // check both would wrongly show "Final". Requiring both avoids either
+    // mistake; anything that doesn't cleanly fit falls back to "Round N".
+    const distanceFromFinal = totalRounds - roundNumber;
+    if (distanceFromFinal === 0 && realMatchCount === 1) return 'Final';
+    if (distanceFromFinal === 1 && realMatchCount === 2) return 'Semi-Finals';
+    if (distanceFromFinal === 2 && realMatchCount === 4) return 'Quarter-Finals';
     return `Round ${roundNumber}`;
   };
 
@@ -224,7 +235,11 @@ const BracketView = () => {
           {roundNumbers.map((roundNum) => (
             <div key={roundNum} className="bracket-round">
               <div className="round-header">
-                <h4>{getRoundName(Number(roundNum), totalRounds)}</h4>
+                <h4>{getRoundName(
+                  Number(roundNum),
+                  totalRounds,
+                  rounds[roundNum].filter((m) => m.status?.toUpperCase() !== 'WALKOVER').length
+                )}</h4>
                 <span className="round-number">Round {roundNum}</span>
               </div>
               <div className="round-matches">
