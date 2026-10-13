@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import divisionService from '../../services/divisionService';
 import athleteService from '../../services/athleteService';
@@ -18,6 +18,8 @@ const AthleteEnrollment = () => {
   const [error, setError] = useState(null);
   const [modalConfig, setModalConfig] = useState({ isOpen: false });
   const [currentPage, setCurrentPage] = useState(1);
+  const [enrollingIds, setEnrollingIds] = useState(new Set());
+  const enrollingRef = useRef(new Set());
   const athletesPerPage = 5;
 
   useEffect(() => {
@@ -85,9 +87,14 @@ const AthleteEnrollment = () => {
   const handleEnroll = async (athlete) => {
     // No confirmation dialog - enrolling is low-friction and easily reversible
     // via the Remove action, so just do it immediately on click.
+    // The ref guards against double-clicks landing before React re-renders.
+    if (enrollingRef.current.has(athlete.id)) return;
+    enrollingRef.current.add(athlete.id);
+    setEnrollingIds(new Set(enrollingRef.current));
+
     try {
       await divisionService.enrollAthlete(divisionId, athlete.id);
-      fetchData();
+      await fetchData();
     } catch (err) {
       setModalConfig({
         isOpen: true,
@@ -98,6 +105,9 @@ const AthleteEnrollment = () => {
         onConfirm: () => setModalConfig({ isOpen: false })
       });
       console.error('Error enrolling athlete:', err);
+    } finally {
+      enrollingRef.current.delete(athlete.id);
+      setEnrollingIds(new Set(enrollingRef.current));
     }
   };
 
@@ -291,8 +301,9 @@ const AthleteEnrollment = () => {
                     <button
                       className="btn btn-small btn-primary"
                       onClick={() => handleEnroll(athlete)}
+                      disabled={enrollingIds.has(athlete.id)}
                     >
-                      + Enroll
+                      {enrollingIds.has(athlete.id) ? 'Enrolling...' : '+ Enroll'}
                     </button>
                   </div>
                 ))}
