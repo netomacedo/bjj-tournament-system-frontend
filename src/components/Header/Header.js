@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import './Header.css';
@@ -7,6 +7,11 @@ const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [location.pathname]);
 
   const isActive = (path) => {
     return location.pathname === path ? 'active' : '';
@@ -25,7 +30,16 @@ const Header = () => {
             <h1>🥋 BJJ Tournament System</h1>
           </Link>
         </div>
-        <nav className="nav-menu">
+        <button
+          type="button"
+          className="hamburger"
+          aria-label="Toggle menu"
+          aria-expanded={menuOpen}
+          onClick={() => setMenuOpen(open => !open)}
+        >
+          {menuOpen ? '✕' : '☰'}
+        </button>
+        <nav className={`nav-menu ${menuOpen ? 'open' : ''}`}>
           <Link to="/dashboard" className={isActive('/dashboard')}>
             Dashboard
           </Link>
@@ -41,7 +55,7 @@ const Header = () => {
             </Link>
           )}
         </nav>
-        <div className="user-menu">
+        <div className={`user-menu ${menuOpen ? 'open' : ''}`}>
           {user && (
             <>
               <span className="user-name">👤 {user.fullName || user.username}</span>

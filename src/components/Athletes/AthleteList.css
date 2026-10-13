@@ -54,7 +54,7 @@
 
 .athlete-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(350px, 100%), 1fr));
   gap: 2rem;
 }
 
@@ -67,6 +67,10 @@
   display: flex;
   flex-direction: column;
   text-align: left;
+  padding: 0;
+  gap: 0;
+  border: none;
+  overflow: hidden;
 }
 
 .athlete-list .athlete-grid .athlete-card:hover {
@@ -83,6 +87,11 @@
 .athlete-list .athlete-grid .athlete-card .athlete-info {
   padding: 1.5rem;
   flex: 1;
+  width: auto;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+  text-align: left;
 }
 
 .athlete-list .athlete-grid .athlete-card .athlete-info h3 {
@@ -94,6 +103,7 @@
 
 .athlete-list .athlete-grid .athlete-card .athlete-info .info-row {
   display: flex;
+  flex-direction: row;
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 0.75rem;
@@ -205,10 +215,52 @@
     width: 100%;
   }
 
+  .search-box,
+  .filter-box {
+    min-width: 0;
+  }
+
   .search-box input,
   .filter-box select {
+    flex: 1 1 0;
+    width: auto;
+    min-width: 0;
+  }
+
+  .search-box .btn,
+  .filter-box .btn {
+    width: auto;
+    flex: 0 0 auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .filter-box {
+    flex-wrap: wrap;
+  }
+
+  .filter-box select {
+    flex-basis: 100%;
+  }
+
+  .filter-box .btn {
+    flex: 1 1 0;
+  }
+
+  .athlete-list .athlete-grid .athlete-card .athlete-info {
+    padding: 1rem;
+  }
+
+  .athlete-list .athlete-grid .athlete-card .athlete-actions {
+    padding: 0.75rem 1rem;
+  }
+
+  .athlete-list .athlete-grid .athlete-card .athlete-actions .btn {
     flex: 1;
-    min-width: auto;
+  }
+
+  .athlete-grid {
+    gap: 1rem;
   }
 
   .athlete-grid {
