@@ -5,8 +5,10 @@ import Header from './components/Header/Header';
 import Login from './components/Auth/Login';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
 import AdminRoute from './components/Auth/AdminRoute';
+import AdminOrPlatformRoute from './components/Auth/AdminOrPlatformRoute';
 import PlatformRoute from './components/Auth/PlatformRoute';
 import AddUser from './components/Admin/AddUser';
+import ManageUsers from './components/Admin/ManageUsers';
 import CreateOrganization from './components/Admin/CreateOrganization';
 import ChangePassword from './components/Auth/ChangePassword';
 import SessionExpiryPopup from './components/SessionExpiryPopup/SessionExpiryPopup';
@@ -52,6 +54,7 @@ function App() {
 
                         {/* Admin Routes */}
                         <Route path="/admin/users/new" element={<AdminRoute><AddUser /></AdminRoute>} />
+                        <Route path="/admin/users" element={<AdminOrPlatformRoute><ManageUsers /></AdminOrPlatformRoute>} />
 
                         {/* Platform Admin Routes */}
                         <Route path="/platform/organizations/new" element={<PlatformRoute><CreateOrganization /></PlatformRoute>} />

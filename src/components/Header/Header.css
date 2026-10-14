@@ -204,9 +204,9 @@
     align-items: center;
   }
 
-  /* On mobile the hamburger panel IS the menu - no separate popover
-     interaction, so the dropdown is always expanded inline once the
-     panel is open, regardless of the trigger's own toggle state. */
+  /* On mobile the hamburger panel hosts the account trigger, but tapping
+     the username still opens/closes the dropdown itself - same two-step
+     interaction as desktop, just stacked inline instead of floating. */
   .account-menu.open {
     display: block;
   }
@@ -216,17 +216,22 @@
     justify-content: space-between;
   }
 
-  .account-caret {
-    display: none;
-  }
-
   .account-dropdown {
     position: static;
-    opacity: 1;
-    visibility: visible;
+    max-height: 0;
+    opacity: 0;
+    visibility: hidden;
+    overflow: hidden;
     transform: none;
     box-shadow: none;
     background: rgba(255, 255, 255, 0.05);
+    transition: max-height 0.2s ease, opacity 0.2s ease;
+  }
+
+  .account-dropdown.open {
+    max-height: 320px;
+    opacity: 1;
+    visibility: visible;
     margin-top: 0.5rem;
   }
 

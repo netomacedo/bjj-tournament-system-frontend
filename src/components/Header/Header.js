@@ -85,9 +85,9 @@ const Header = () => {
             </button>
 
             <div className={`account-dropdown ${accountMenuOpen ? 'open' : ''}`}>
-              {user?.role === 'ROLE_ADMIN' && (
-                <Link to="/admin/users/new" className={isActive('/admin/users/new')}>
-                  ➕ Add User
+              {(user?.role === 'ROLE_ADMIN' || user?.role === 'ROLE_PLATFORM_ADMIN') && (
+                <Link to="/admin/users" className={isActive('/admin/users')}>
+                  👥 Manage Users
                 </Link>
               )}
               {user?.role === 'ROLE_PLATFORM_ADMIN' && (

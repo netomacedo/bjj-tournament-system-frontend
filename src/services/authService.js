@@ -40,6 +40,19 @@ class AuthService {
     return response.data;
   }
 
+  // List users - an admin's own organization, or everyone for a platform admin.
+  async getAllUsers() {
+    const response = await api.get('/auth/users/all');
+    return response.data;
+  }
+
+  // Admin-initiated reset of ANOTHER user's password (no current password
+  // needed, unlike changePassword above) - for when someone is locked out.
+  async resetUserPassword(userId, newPassword) {
+    const response = await api.put(`/auth/users/${userId}/reset-password`, { newPassword });
+    return response.data;
+  }
+
   // Login user
   async login(username, password) {
     const response = await axios.post(`${AUTH_URL}/login`, {
