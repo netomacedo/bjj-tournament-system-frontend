@@ -25,6 +25,21 @@ class AuthService {
     return response.data;
   }
 
+  // Platform-admin only: create a brand-new organization and its first
+  // org-admin together. No token is returned in the response for this
+  // endpoint, so there's nothing to worry about clobbering here.
+  async createOrganization(orgData) {
+    const response = await api.post('/platform/organizations', orgData);
+    return response.data;
+  }
+
+  // Change the current user's own password. On success, the old token
+  // stays valid (nothing was reissued) - no localStorage changes needed.
+  async changePassword(currentPassword, newPassword) {
+    const response = await api.post('/auth/change-password', { currentPassword, newPassword });
+    return response.data;
+  }
+
   // Login user
   async login(username, password) {
     const response = await axios.post(`${AUTH_URL}/login`, {
